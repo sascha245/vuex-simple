@@ -1,0 +1,9 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "editor.formatOnSave": true,
+  "editor.rulers": [
+    100
+  ]
+  // "typescript.implementationsCodeLens.enabled": true
+  // "typescript.referencesCodeLens.enabled": true
+}
