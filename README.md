@@ -142,7 +142,7 @@ I conceived the module so we can easily make it into a service and inject it in 
 
 Here a simple example:
 
-```
+```ts
 import { Container, Service } from 'typedi';
 import Vue from 'vue';
 
