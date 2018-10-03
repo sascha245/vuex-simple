@@ -1,9 +1,8 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
   "editor.formatOnSave": true,
-  "editor.rulers": [
-    100
-  ]
+  "editor.rulers": [100],
+  "importSorter.generalConfiguration.sortOnBeforeSave": true
   // "typescript.implementationsCodeLens.enabled": true
   // "typescript.referencesCodeLens.enabled": true
 }

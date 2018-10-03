@@ -1,7 +1,7 @@
 {
   "name": "vuex-simple",
-  "version": "1.0.0",
-  "description": "A simpler way to setup your Vuex store in Typescript",
+  "version": "0.1.0",
+  "description": "A simpler way to write your Vuex store in Typescript",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
@@ -32,8 +32,7 @@
     "reset": "git clean -dfx && git reset --hard && npm i",
     "clean": "trash build test",
     "all": "run-s reset test cov:check doc:html",
-    "prepare-release": "run-s all version doc:publish",
-    "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('vuex-simple must be installed with Yarn: https://yarnpkg.com/')\""
+    "prepare-release": "run-s all version doc:publish"
   },
   "scripts-info": {
     "info": "Display information about the package scripts",
@@ -51,7 +50,9 @@
   "engines": {
     "node": ">=8.9"
   },
-  "dependencies": {},
+  "dependencies": {
+    "vuex": "^3.0.1"
+  },
   "devDependencies": {
     "ava": "1.0.0-beta.7",
     "codecov": "^3.1.0",
@@ -65,9 +66,9 @@
     "trash-cli": "^1.4.0",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
-    "tslint-immutable": "^4.7.0",
     "typedoc": "^0.12.0",
-    "typescript": "^3.0.3"
+    "typescript": "^3.0.3",
+    "vue": "^2.5.17"
   },
   "ava": {
     "failFast": true,
@@ -90,5 +91,8 @@
     "exclude": [
       "**/*.spec.js"
     ]
+  },
+  "peerDependencies": {
+    "vue": "^2.5.17"
   }
 }
