@@ -4,14 +4,11 @@ A simpler way to write your Vuex store in Typescript
 
 ## TO DO
 
-**Note:** this module is still in development and thought for private usage</br>
+**Note:** this module is still in development and the API may change in later versions</br>
 
-- Inbuild Container support to inject modules in Vuejs components
-- Vuex Getters (yep, we still don't handle those )
+- Inbuild Container support to allow module injection in Vuejs components
 
 ## Getting Started
-
-These instructions will show you how to install and use this package.
 
 ### Installing
 
@@ -27,13 +24,9 @@ If you use yarn:
 yarn add vuex-simple
 ```
 
-### Usage
+### Example
 
-This part will explain how to setup a basic vuex store and create modules
-
-#### Basic example
-
-In this part, we create a basic counter module for vuex
+#### Module
 
 ```ts
 // modules/counter.ts
@@ -72,7 +65,11 @@ class MyCounter {
     this.increment();
   }
 }
+```
 
+#### Store
+
+```ts
 // store.ts
 
 import Vue from 'vue';
@@ -99,43 +96,51 @@ myCounter.asyncIncrement();
 myCounter.myGetter;
 ```
 
-Let's explain what we are doing here a bit:
+### Features
 
-- First we declare a new class and decorate it with `@Module(namespace)`
+#### Module
+To create a module, we declare a new class and decorate it with `@Module(namespace)`
 
-- To add a mutation, we simply write a normal function and add a `@Mutation()` decorator to it. For now, mutations can only have at most 1 parameter.
+#### State
+To tell the module which properties of the class will compose the state of the vuex module, we need to decorate those properties with `@State()`
 
-- To add a getter, we simply write a normal getter and add a `@Getter()` decorator to it.
+#### Getter
+To add a getter, we simply write a normal getter and add a `@Getter()` decorator to it.
 
-- To add an action, we simply write a normal function and add a `@Action()` decorator to it. As for mutations, actions can, for now, only have at most 1 parameter.
+#### Mutation
+To add a mutation, we simply write a normal function and add a `@Mutation()` decorator to it. For now, mutations can only have at most 1 parameter.
 
-**Note on actions:** vuex use actions to do their async stuff, but we don't really need an action for that, a simple function that can call our mutations is all we need, as shown above.
-So for now `@Action` is still included, but as I don't see any utility in it, it may happen that it is removed in later versions.
+#### Action
+To add an action, we simply write a normal function and add a `@Action()` decorator to it. As for mutations, actions can, for now, only have at most 1 parameter.
 
-Now that we created our module, let's see how we setup our store:
+**Note on actions:** vuex use actions to do their async stuff, but we don't really need an action for that, a simple function that can call our mutations is all we need, as shown above.</br>
+So for now `@Action` is still included, but it may happen that it is removed in later versions.
 
-- Use `Vue.use(Vuex)` or `Vue.use(VuexSimple)` to load vuex
-- We instantiate all our modules, so that they are loaded into the store builder singleton.
+#### How to setup your store
 
-**Warning:** For now, if you instantiate a module multiple times, it will cause quite a lot of problems, so be careful to only instantiate your module once :s
+1. Use `Vue.use(VuexSimple)` to load vuex
+2. Instantiate all our modules **once** (can also be before step 1)
 
-- Note that we can also add our existing vuex modules, they will still work normally, we just can't configure **for now** the root of the store :s The store is also set to strict by default.
+**Warning:** For now, if you instantiate a module multiple times, it will cause quite a lot of problems, so be warned!
+
+3. (optional) Add your existing vuex modules: they will still work normally
 
 ```ts
 const storeBuilder = getStoreBuilder();
 storeBuilder.addModule(namespace: string, module: Vuex.Module);
 ```
 
-- We then finish by creating the store with `storeBuilder.create()`
+4. We finish by creating the store with `storeBuilder.create()`
 
-**Note on module functions:** We can now call any function from our counter module as we would with normal functions, even those marked with `@Mutation()`!</br>
-That allows use to implement pretty easily typesafety without having to write heavy boilerplates.
+**Note:** We can't configure the root of the store **for now**. The store is also set to use strict mode by default.
 
-#### Container example
 
-I conceived the module so we can easily make it into a service and inject it in our components as need arises. For that, I used the package [typedi](http://github.com/pleerock/typedi)
 
-Here a simple example:
+### Usage of a Container
+
+For now, there is no container included by default by *vuex-simple*, so I recommand you to use [typedi](http://github.com/pleerock/typedi) if you want to use one. You will be able to easily inject your modules / services where you need them.
+
+#### Module
 
 ```ts
 // modules/counter.ts
@@ -161,7 +166,11 @@ class MyCounter {
     this.increment();
   }
 }
+```
 
+#### Store
+
+```ts
 // store.ts
 
 import Vue from 'vue';
@@ -183,11 +192,6 @@ myCounter.increment();
 
 myCounter.asyncIncrement();
 ```
-
-The only thing you need to change here is add the `@Service()` decorator on top of your class and instead of instantiating your class you do `Container.get(CounterModule)`
-
-To inject your service in your Vuejs components, simply use Container.get for now.</br>
-I will publish a small package shortly so you can use `@Inject()` in your components. This package will then also be included by default by this one.
 
 ## Contributors
 
