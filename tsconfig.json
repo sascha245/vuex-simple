@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2015",
     "outDir": "build/main",
-    "rootDir": ".",
+    "rootDir": "src",
     "baseUrl": ".",
     "moduleResolution": "node",
     "module": "commonjs",
@@ -40,7 +40,7 @@
     // "types": [],
     // "typeRoots": ["node_modules/@types", "src/types"]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules/**"],
   "compileOnSave": false
 }

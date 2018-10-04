@@ -1,13 +1,19 @@
 {
   "name": "vuex-simple",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "A simpler way to write your Vuex store in Typescript",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
   "repository": "https://github.com/sascha245/vuex-simple",
   "license": "MIT",
-  "keywords": [],
+  "keywords": [
+    "vuex",
+    "typescript",
+    "decorators",
+    "class",
+    "simple"
+  ],
   "scripts": {
     "info": "npm-scripts-info",
     "build": "run-s clean && run-p build:*",
@@ -33,7 +39,7 @@
     "clean": "trash build test",
     "all": "run-s reset test cov:check doc:html",
     "prepare-release": "run-s all version doc:publish",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build && npm run test:unit"
   },
   "scripts-info": {
     "info": "Display information about the package scripts",

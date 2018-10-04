@@ -12,3 +12,7 @@ build/docs
 coverage
 .nyc_output
 *.log
+.circleci
+
+package-lock.json
+yarn.lock

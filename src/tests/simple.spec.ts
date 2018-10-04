@@ -1,7 +1,7 @@
 import untypedTest, { TestInterface } from 'ava';
 import Vue from 'vue';
 
-import VuexSimple, { getStoreBuilder, Module, Mutation, State } from '../src/index';
+import VuexSimple, { getStoreBuilder, Module, Mutation, State } from '../index';
 
 @Module('test')
 class TestModule {
