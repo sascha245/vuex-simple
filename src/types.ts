@@ -1,5 +1,5 @@
 export enum DecoratorType {
-  STATE,
+  STATE = 1,
   ACTION,
   MUTATION
 }

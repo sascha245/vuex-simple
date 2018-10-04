@@ -1,32 +1,68 @@
+import Vue from 'vue';
 import { Action as Act, Mutation as Mut } from 'vuex';
 
 import { ModuleBuilder } from './module-builder';
 import { DecoratorType } from './types';
 import Utils from './utils';
 
+function getMethodDescriptor(prototype: any, propertyName: string) {
+  const descriptor = Object.getOwnPropertyDescriptor(prototype, propertyName);
+  if (descriptor && typeof descriptor.value === 'function') {
+    return descriptor;
+  }
+  return undefined;
+}
+
 export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
   const constructor = instance.constructor;
   const decorators = Utils.getDecorators(constructor);
   const proto = constructor.prototype;
+
+  applyStates(instance);
 
   const properties = Object.getOwnPropertyNames(proto);
   properties.forEach(key => {
     if (key === 'constructor') {
       return;
     }
-    const descriptor = Object.getOwnPropertyDescriptor(proto, key);
-    if (descriptor && typeof descriptor.value === 'function') {
-      const decorator = decorators.get(key);
-      if (decorator) {
-        switch (decorator) {
-          case DecoratorType.MUTATION:
+
+    const decorator = decorators.get(key);
+    const descriptor = getMethodDescriptor(proto, key);
+
+    if (decorator) {
+      switch (decorator) {
+        case DecoratorType.MUTATION:
+          if (descriptor) {
             applyMutation<State>(moduleBuilder, instance, constructor, descriptor, key);
-            break;
-          case DecoratorType.ACTION:
+          }
+          break;
+        case DecoratorType.ACTION:
+          if (descriptor) {
             applyAction<State>(moduleBuilder, instance, constructor, descriptor, key);
-            break;
-        }
+          }
+          break;
       }
+    }
+  });
+}
+
+function applyStates(instance: any) {
+  const constructor = instance.constructor;
+  const decorators = Utils.getDecorators(constructor);
+  const keys = Object.keys(instance);
+
+  keys.forEach(propertyName => {
+    const decorator = decorators.get(propertyName);
+    if (decorator && decorator === DecoratorType.STATE) {
+      Vue.set(instance.__state__, propertyName, instance[propertyName]);
+      Object.defineProperty(instance, propertyName, {
+        get() {
+          return instance.__state__[propertyName];
+        },
+        set(val: any) {
+          instance.__state__[propertyName] = val;
+        }
+      });
     }
   });
 }

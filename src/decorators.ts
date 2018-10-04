@@ -18,10 +18,11 @@ export function Module(pOptions: ModuleOptions | string) {
   return <T extends { new (...args: any[]): {} }>(target: T) => {
     return function(...args: any[]) {
       const instance = new target(...args);
+      (instance as any).__state__ = {};
 
       const options = handleOptions(pOptions);
       const storeBuilder: StoreBuilder<any> = getStoreBuilder();
-      const moduleBuilder = storeBuilder.module(options.namespace, instance);
+      const moduleBuilder = storeBuilder.module(options.namespace, (instance as any).__state__);
 
       applyDecorators<any>(moduleBuilder, instance);
 

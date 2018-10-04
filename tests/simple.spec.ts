@@ -1,10 +1,11 @@
 import untypedTest, { TestInterface } from 'ava';
 import Vue from 'vue';
 
-import VuexSimple, { getStoreBuilder, Module, Mutation } from '../src/index';
+import VuexSimple, { getStoreBuilder, Module, Mutation, State } from '../src/index';
 
 @Module('test')
 class TestModule {
+  @State()
   public counter: number = 0;
 
   @Mutation()
