@@ -1,47 +1,58 @@
-// import { DecoratorType } from './types';
-import { VuexModule } from './vuex-module';
+import { Action, Mutation } from 'vuex';
 
-// function setDecorator(target: any, propertyName: string, decorator: DecoratorType) {
-//   const Ctor = typeof target === 'function' ? (target as any) : (target.constructor as any);
-//   let decorators: Map<string, DecoratorType> = Ctor.__decorators__;
-//   if (!decorators) {
-//     Ctor.__decorators__ = decorators = new Map();
-//   }
-//   decorators.set(propertyName, decorator);
-// }
+import { applyDecorators } from './metadata';
+import { getStoreBuilder, StoreBuilder } from './store-builder';
+import { DecoratorType, ModuleOptions } from './types';
+import Utils from './utils';
 
-export function Mutation<T extends VuexModule>() {
+function handleOptions(options: ModuleOptions | string): ModuleOptions {
+  if (typeof options === 'string') {
+    return {
+      namespace: options
+    };
+  }
+  return options;
+}
+
+export function Module(pOptions: ModuleOptions | string) {
+  return <T extends { new (...args: any[]): {} }>(target: T) => {
+    return function(...args: any[]) {
+      const instance = new target(...args);
+      (instance as any).__state__ = {};
+
+      const options = handleOptions(pOptions);
+      const storeBuilder: StoreBuilder<any> = getStoreBuilder();
+      const moduleBuilder = storeBuilder.module(options.namespace, (instance as any).__state__);
+
+      applyDecorators<any>(moduleBuilder, instance);
+
+      return instance;
+    } as any;
+  };
+}
+
+export function State<T>() {
+  return (target: T, propertyName: string) => {
+    Utils.setDecorator(target, propertyName, DecoratorType.STATE);
+  };
+}
+
+export function Mutation<T>() {
   return (
     target: T,
     propertyName: string,
     descriptor: TypedPropertyDescriptor<(payload?: any) => void>
   ) => {
-    const Ctor =
-      typeof target === 'function'
-        ? (target as any)
-        : (target.constructor as any);
-    let mutations: Set<string> = Ctor.__mutations__;
-    if (!mutations) {
-      Ctor.__mutations__ = mutations = new Set<string>();
-    }
-    mutations.add(propertyName);
+    Utils.setDecorator(target, propertyName, DecoratorType.MUTATION);
   };
 }
 
-export function Action<T extends VuexModule>() {
+export function Action<T>() {
   return (
     target: T,
     propertyName: string,
     descriptor: TypedPropertyDescriptor<(payload?: any) => Promise<any>>
   ) => {
-    const Ctor =
-      typeof target === 'function'
-        ? (target as any)
-        : (target.constructor as any);
-    let actions: Set<string> = Ctor.__actions__;
-    if (!actions) {
-      Ctor.__actions__ = actions = new Set<string>();
-    }
-    actions.add(propertyName);
+    Utils.setDecorator(target, propertyName, DecoratorType.ACTION);
   };
 }

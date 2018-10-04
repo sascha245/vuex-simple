@@ -43,7 +43,7 @@ export class StoreBuilder<State = any> {
   }
 }
 
-const storeBuilderSingleton = new StoreBuilder<{}>({
+const storeBuilderSingleton = new StoreBuilder({
   state: {},
   strict: true
 });
