@@ -37,6 +37,12 @@ export function State<T>() {
   };
 }
 
+export function Getter() {
+  return (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
+    Utils.setDecorator(target, propertyName, DecoratorType.GETTER);
+  };
+}
+
 export function Mutation<T>() {
   return (
     target: T,

@@ -38,12 +38,19 @@ In this part, we create a basic counter module for vuex
 ```ts
 // modules/counter.ts
 
-import { Mutation, Module } from 'vuex-simple';
+import { Mutation, Module, Getter, State } from 'vuex-simple';
 
 @Module('counter')
 class MyCounter {
   @State()
   public counter: number = 0;
+
+  // A simple getter that is cached and made reactive by vuex
+  @Getter()
+  public get myGetter() {
+    console.log('my getter!');
+    return 42;
+  }
 
   // A simple mutation function
   // You can only modify your state in here, or Vuex will give you an error
@@ -87,6 +94,9 @@ myCounter.increment();
 myCounter.incrementBy(10);
 
 myCounter.asyncIncrement();
+
+// call vuex getter
+myCounter.myGetter;
 ```
 
 Let's explain what we are doing here a bit:
@@ -94,6 +104,8 @@ Let's explain what we are doing here a bit:
 - First we declare a new class and decorate it with `@Module(namespace)`
 
 - To add a mutation, we simply write a normal function and add a `@Mutation()` decorator to it. For now, mutations can only have at most 1 parameter.
+
+- To add a getter, we simply write a normal getter and add a `@Getter()` decorator to it.
 
 - To add an action, we simply write a normal function and add a `@Action()` decorator to it. As for mutations, actions can, for now, only have at most 1 parameter.
 
@@ -131,7 +143,7 @@ Here a simple example:
 import { Container, Service } from 'typedi';
 import Vue from 'vue';
 
-import VuexSimple, { getStoreBuilder, Mutation, VuexModule } from 'vuex-simple';
+import { Mutation, Module, State } from 'vuex-simple';
 
 @Service()
 @Module('counter')

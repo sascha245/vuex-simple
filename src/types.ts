@@ -1,7 +1,8 @@
 export enum DecoratorType {
   STATE = 1,
   ACTION,
-  MUTATION
+  MUTATION,
+  GETTER
 }
 
 export type DecoratorMap = Map<string, DecoratorType>;

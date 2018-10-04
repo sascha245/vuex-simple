@@ -1,4 +1,4 @@
-import { Action, Module, Mutation } from 'vuex';
+import { Action, Getter, Module, Mutation } from 'vuex';
 
 import { StoreBuilder } from './store-builder';
 
@@ -7,16 +7,13 @@ export class ModuleBuilder<State = any, RootState = any> {
   private _module: Module<State, RootState>;
   private _namespace: string;
 
-  constructor(
-    storeBuilder: StoreBuilder<RootState>,
-    namespace: string,
-    state: State
-  ) {
+  constructor(storeBuilder: StoreBuilder<RootState>, namespace: string, state: State) {
     this._storeBuilder = storeBuilder;
     this._namespace = namespace;
     this._module = {
       actions: {},
       mutations: {},
+      getters: {},
       namespaced: true,
       state
     };
@@ -32,10 +29,23 @@ export class ModuleBuilder<State = any, RootState = any> {
       this._module.mutations[name] = mutation;
     }
   }
+  public addGetter(name: string, getter: Getter<State, RootState>) {
+    if (this._module.getters) {
+      this._module.getters[name] = getter;
+    }
+  }
 
   public commit(name: string, payload: any) {
     if (this._storeBuilder && this._storeBuilder.store) {
-      this._storeBuilder.store.commit(this.namespace + '/' + name, payload);
+      return this._storeBuilder.store.commit(this.namespace + '/' + name, payload);
+    } else {
+      throw new Error('Could not commit: no store created');
+    }
+  }
+
+  public read(name: string) {
+    if (this._storeBuilder && this._storeBuilder.store) {
+      return this._storeBuilder.store.getters[this.namespace + '/' + name];
     } else {
       throw new Error('Could not commit: no store created');
     }
@@ -43,7 +53,7 @@ export class ModuleBuilder<State = any, RootState = any> {
 
   public dispatch(name: string, payload: any) {
     if (this._storeBuilder && this._storeBuilder.store) {
-      this._storeBuilder.store.dispatch(this.namespace + '/' + name, payload);
+      return this._storeBuilder.store.dispatch(this.namespace + '/' + name, payload);
     } else {
       throw new Error('Could not dispatch: no store created');
     }

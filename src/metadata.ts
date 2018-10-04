@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { Action as Act, Mutation as Mut } from 'vuex';
+import { Action as Act, Getter, Mutation as Mut } from 'vuex';
 
 import { ModuleBuilder } from './module-builder';
 import { DecoratorType } from './types';
@@ -21,6 +21,7 @@ export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>,
   applyStates(instance);
 
   const properties = Object.getOwnPropertyNames(proto);
+
   properties.forEach(key => {
     if (key === 'constructor') {
       return;
@@ -31,6 +32,12 @@ export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>,
 
     if (decorator) {
       switch (decorator) {
+        case DecoratorType.GETTER:
+          const accessorDescriptor = Object.getOwnPropertyDescriptor(proto, key);
+          if (accessorDescriptor && typeof accessorDescriptor.get === 'function') {
+            applyGetter(moduleBuilder, instance, constructor, accessorDescriptor, key);
+          }
+          break;
         case DecoratorType.MUTATION:
           if (descriptor) {
             applyMutation<State>(moduleBuilder, instance, constructor, descriptor, key);
@@ -84,6 +91,27 @@ function applyMutation<State>(
   constructor.prototype[propertyName] = (payload: any) => {
     moduleBuilder.commit(propertyName, payload);
   };
+}
+
+function applyGetter<State>(
+  moduleBuilder: ModuleBuilder<State, any>,
+  instance: any,
+  constructor: any,
+  descriptor: PropertyDescriptor,
+  propertyName: string
+) {
+  let getterFunction: Function = descriptor.get ? descriptor.get : (state: any) => ({});
+  getterFunction = getterFunction.bind(instance);
+  const getter: Getter<State, any> = state => {
+    return getterFunction();
+  };
+  moduleBuilder.addGetter(propertyName, getter);
+
+  Object.defineProperty(constructor.prototype, propertyName, {
+    get() {
+      return moduleBuilder.read(propertyName);
+    }
+  });
 }
 
 function applyAction<State>(
