@@ -3,7 +3,7 @@ import { Action as Act, Getter, Mutation as Mut } from 'vuex';
 
 import { ModuleBuilder } from './module-builder';
 import { DecoratorType } from './types';
-import Utils from './utils';
+import { decoratorUtil } from './utils';
 
 function getMethodDescriptor(prototype: any, propertyName: string) {
   const descriptor = Object.getOwnPropertyDescriptor(prototype, propertyName);
@@ -15,7 +15,7 @@ function getMethodDescriptor(prototype: any, propertyName: string) {
 
 export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
   const constructor = instance.constructor;
-  const decorators = Utils.getDecorators(constructor);
+  const decorators = decoratorUtil.getDecorators(constructor);
   const proto = constructor.prototype;
 
   applyStates(instance);
@@ -55,7 +55,7 @@ export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>,
 
 function applyStates(instance: any) {
   const constructor = instance.constructor;
-  const decorators = Utils.getDecorators(constructor);
+  const decorators = decoratorUtil.getDecorators(constructor);
   const keys = Object.keys(instance);
 
   keys.forEach(propertyName => {

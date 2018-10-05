@@ -1,9 +1,10 @@
+import { Container, Token } from 'typedi';
 import { Action, Mutation } from 'vuex';
 
 import { applyDecorators } from './metadata';
 import { getStoreBuilder, StoreBuilder } from './store-builder';
-import { DecoratorType, ModuleOptions } from './types';
-import Utils from './utils';
+import { DecoratorType, InjectType, ModuleOptions } from './types';
+import { decoratorUtil, injectUtil } from './utils';
 
 function handleOptions(options: ModuleOptions | string): ModuleOptions {
   if (typeof options === 'string') {
@@ -16,49 +17,72 @@ function handleOptions(options: ModuleOptions | string): ModuleOptions {
 
 export function Module(pOptions: ModuleOptions | string) {
   return <T extends { new (...args: any[]): {} }>(target: T) => {
+    let singletonInstance: any;
+
     return function(...args: any[]) {
+      if (singletonInstance) {
+        return singletonInstance;
+      }
+
       const instance = new target(...args);
-      (instance as any).__state__ = {};
 
       const options = handleOptions(pOptions);
       const storeBuilder: StoreBuilder<any> = getStoreBuilder();
+
+      (instance as any).__state__ = {};
+
       const moduleBuilder = storeBuilder.module(options.namespace, (instance as any).__state__);
 
       applyDecorators<any>(moduleBuilder, instance);
+
+      injectUtil.injectAll(target, instance);
+
+      Container.set(target, instance);
+      singletonInstance = instance;
 
       return instance;
     } as any;
   };
 }
 
-export function State<T>() {
-  return (target: T, propertyName: string) => {
-    Utils.setDecorator(target, propertyName, DecoratorType.STATE);
+export function State() {
+  return (target: any, propertyName: string) => {
+    decoratorUtil.setDecorator(target, propertyName, DecoratorType.STATE);
+  };
+}
+
+export function Inject(type?: (type?: any) => Function): Function;
+export function Inject(serviceName?: string): Function;
+export function Inject(token: Token<any>): Function;
+
+export function Inject(typeOrName?: InjectType) {
+  return (target: any, propertyName: string, index?: number) => {
+    injectUtil.registerInjection(target, propertyName, typeOrName, index);
   };
 }
 
 export function Getter() {
   return (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
-    Utils.setDecorator(target, propertyName, DecoratorType.GETTER);
+    decoratorUtil.setDecorator(target, propertyName, DecoratorType.GETTER);
   };
 }
 
-export function Mutation<T>() {
+export function Mutation() {
   return (
-    target: T,
+    target: any,
     propertyName: string,
     descriptor: TypedPropertyDescriptor<(payload?: any) => void>
   ) => {
-    Utils.setDecorator(target, propertyName, DecoratorType.MUTATION);
+    decoratorUtil.setDecorator(target, propertyName, DecoratorType.MUTATION);
   };
 }
 
-export function Action<T>() {
+export function Action() {
   return (
-    target: T,
+    target: any,
     propertyName: string,
     descriptor: TypedPropertyDescriptor<(payload?: any) => Promise<any>>
   ) => {
-    Utils.setDecorator(target, propertyName, DecoratorType.ACTION);
+    decoratorUtil.setDecorator(target, propertyName, DecoratorType.ACTION);
   };
 }

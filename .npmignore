@@ -8,11 +8,13 @@ tslint.json
 .prettierignore
 .vscode
 build/docs
+example
+tests
 **/*.spec.*
 coverage
 .nyc_output
 *.log
-.circleci
+.editorconfig
 
 package-lock.json
 yarn.lock

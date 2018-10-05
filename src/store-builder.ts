@@ -1,3 +1,4 @@
+import { Container } from 'typedi';
 import { Module, Store, StoreOptions } from 'vuex';
 
 import { ModuleBuilder } from './module-builder';
@@ -25,6 +26,12 @@ export class StoreBuilder<State = any> {
       this._options.modules[namespace] = moduleBuilder.module;
     }
     return moduleBuilder;
+  }
+
+  public loadModules<T extends { new (...args: any[]): {} }>(modules: T[]) {
+    modules.forEach(module => {
+      Container.get(module);
+    });
   }
 
   public addModule(namespace: string, moduleOptions: Module<any, any>) {

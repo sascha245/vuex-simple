@@ -2,39 +2,42 @@
 
 A simpler way to write your Vuex store in Typescript
 
-## TO DO
+## Usage
 
-**Note:** this module is still in development and the API may change in later versions</br>
+1. Install module:
 
-- Inbuild Container support to allow module injection in Vuejs components
+`npm install vuex-simple --save`
 
-## Getting Started
+2. Install reflect-metadata package:
 
-### Installing
+`npm install reflect-metadata --save`
 
-Install the package with npm:
+and import it somewhere in the global place of your app before any service declaration or import (for example in app.ts):
 
+`import "reflect-metadata";`
+
+3. Enabled following settings in tsconfig.json:
+
+```json
+"emitDecoratorMetadata": true,
+"experimentalDecorators": true,
 ```
-npm install vuex-simple
-```
 
-If you use yarn:
+**Note:** *vuex-simple* uses the Container from [typedi](http://github.com/pleerock/typedi).
 
-```
-yarn add vuex-simple
-```
 
-### Example
+## Example
 
 #### Module
 
 ```ts
-// modules/counter.ts
+// store/modules/counter.ts
 
 import { Mutation, Module, Getter, State } from 'vuex-simple';
 
 @Module('counter')
-class MyCounter {
+class CounterModule {
+
   @State()
   public counter: number = 0;
 
@@ -57,8 +60,6 @@ class MyCounter {
     this.counter += nb;
   }
 
-  // You can also add @Action to transform the function to a store action that will be dispatched on call, but it's not really necessary
-  // @Action()
   public async asyncIncrement() {
     await new Promise(r => setTimeout(r, 500));
     // simply call mutation function like you would any other function
@@ -70,47 +71,96 @@ class MyCounter {
 #### Store
 
 ```ts
-// store.ts
+// store/index.ts
 
 import Vue from 'vue';
 
 import VuexSimple, { getStoreBuilder } from 'vuex-simple';
 
-import MyCounter from './modules/counter';
-
-// simply instantiate to add module to the store builder singleton
-const myCounter = new MyCounter();
+import CounterModule from './modules/counter';
 
 Vue.use(VuexSimple);
 
-const store = getStoreBuilder().create();
+const storeBuilder = getStoreBuilder();
+storeBuilder.loadModules([
+  CounterModule
+]);
+const store = storeBuilder.create();
 
-// simply use mutations or actions as standard functions
-// your editor should be able to autocomplete everything
-myCounter.increment();
-myCounter.incrementBy(10);
+export default store;
 
-myCounter.asyncIncrement();
-
-// call vuex getter
-myCounter.myGetter;
 ```
 
-### Features
+#### Usage
+
+```ts
+// In your vue component
+
+import { Container, Inject } from 'vuex-simple';
+import CounterModule from '@/store/modules/counter';
+
+@Component
+export default class MyComponent extends Vue {
+
+  @Inject()
+  public counterModule!: CounterModule;
+
+  public get readState() {
+    // access state like a property
+    return this.counterModule.counter;
+  }
+
+  public get readGetter() {
+    // access getter like a property
+    return this.counterModule.myGetter;
+  }
+
+  public commitIncrement() {
+    // call mutation like a function
+    this.counterModule.increment();
+  }
+
+  public commitIncrementBy(number: id) {
+    // call with parameter / payload
+    this.counterModule.incrementBy(10);
+  }
+
+  public callAction() {
+    counterModule.asyncIncrement();
+  }
+
+}
+
+// Outside of a Vue component, you can also use Container to access the module
+const counterModule = Container.get(CounterModule);
+
+
+```
+
+## Features
 
 #### Module
+
 To create a module, we declare a new class and decorate it with `@Module(namespace)`
 
+#### Inject
+
+Inject another module or service in your module with `@Inject()`. This feature will enable you to easily split up your code across multiple files in a logic way.
+
 #### State
+
 To tell the module which properties of the class will compose the state of the vuex module, we need to decorate those properties with `@State()`
 
 #### Getter
+
 To add a getter, we simply write a normal getter and add a `@Getter()` decorator to it.
 
 #### Mutation
+
 To add a mutation, we simply write a normal function and add a `@Mutation()` decorator to it. For now, mutations can only have at most 1 parameter.
 
 #### Action
+
 To add an action, we simply write a normal function and add a `@Action()` decorator to it. As for mutations, actions can, for now, only have at most 1 parameter.
 
 **Note on actions:** vuex use actions to do their async stuff, but we don't really need an action for that, a simple function that can call our mutations is all we need, as shown above.</br>
@@ -118,10 +168,15 @@ So for now `@Action` is still included, but it may happen that it is removed in 
 
 #### How to setup your store
 
-1. Use `Vue.use(VuexSimple)` to load vuex
-2. Instantiate all our modules **once** (can also be before step 1)
+1. Use `Vue.use(VuexSimple)`
+2. Use the StoreBuilder to load your modules
 
-**Warning:** For now, if you instantiate a module multiple times, it will cause quite a lot of problems, so be warned!
+```ts
+const storeBuilder = getStoreBuilder();
+storeBuilder.loadModules([
+  CounterModule
+]);
+```
 
 3. (optional) Add your existing vuex modules: they will still work normally
 
@@ -132,66 +187,9 @@ storeBuilder.addModule(namespace: string, module: Vuex.Module);
 
 4. We finish by creating the store with `storeBuilder.create()`
 
+
 **Note:** We can't configure the root of the store **for now**. The store is also set to use strict mode by default.
 
-
-
-### Usage of a Container
-
-For now, there is no container included by default by *vuex-simple*, so I recommand you to use [typedi](http://github.com/pleerock/typedi) if you want to use one. You will be able to easily inject your modules / services where you need them.
-
-#### Module
-
-```ts
-// modules/counter.ts
-
-import { Container, Service } from 'typedi';
-import Vue from 'vue';
-
-import { Mutation, Module, State } from 'vuex-simple';
-
-@Service()
-@Module('counter')
-class MyCounter {
-  @State()
-  public counter: number = 0;
-
-  @Mutation()
-  public increment() {
-    this.counter++;
-  }
-
-  public async asyncIncrement() {
-    await new Promise(r => setTimeout(r, 500));
-    this.increment();
-  }
-}
-```
-
-#### Store
-
-```ts
-// store.ts
-
-import Vue from 'vue';
-
-import VuexSimple, { getStoreBuilder } from 'vuex-simple';
-
-import MyCounter from './modules/counter';
-
-// we need to get the module once so that typedi instantiates it for us
-const myCounter = Container.get(MyCounter);
-
-Vue.use(VuexSimple);
-
-const storeBuilder = getStoreBuilder();
-storeBuilder.create();
-
-// simply use as you would normally do
-myCounter.increment();
-
-myCounter.asyncIncrement();
-```
 
 ## Contributors
 
