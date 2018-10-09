@@ -1,5 +1,6 @@
 {
   "extends": ["tslint:latest", "tslint-config-prettier"],
+  "defaultSeverity": "warn",
   "rules": {
     "interface-name": [true, "never-prefix"],
     "variable-name": false,

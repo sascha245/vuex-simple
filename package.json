@@ -96,9 +96,6 @@
       "path": "cz-conventional-changelog"
     }
   },
-  "prettier": {
-    "singleQuote": true
-  },
   "nyc": {
     "exclude": [
       "**/*.spec.js"

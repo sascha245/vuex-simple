@@ -29,9 +29,7 @@ export function Module(pOptions: ModuleOptions | string) {
       const options = handleOptions(pOptions);
       const storeBuilder: StoreBuilder<any> = getStoreBuilder();
 
-      (instance as any).__state__ = {};
-
-      const moduleBuilder = storeBuilder.module(options.namespace, (instance as any).__state__);
+      const moduleBuilder = storeBuilder.module(options.namespace, {});
 
       applyDecorators<any>(moduleBuilder, instance);
 

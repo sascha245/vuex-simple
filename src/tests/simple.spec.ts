@@ -63,3 +63,28 @@ test.serial('simple injection test', async t => {
 
   t.is(testModule.counter, 42);
 });
+
+test.serial('store replaceState', async t => {
+  const testModule = Container.get(TestModule);
+
+  t.is(testModule.counter, 0);
+  testModule.increment();
+  testModule.increment();
+  testModule.increment();
+  t.is(testModule.counter, 3);
+
+  const storeBuilder = getStoreBuilder();
+  const store = storeBuilder.store;
+
+  const newState = JSON.parse(JSON.stringify(store.state));
+  newState.test.counter = 1;
+  store.replaceState(newState);
+
+  t.is(store.state.test.counter, 1);
+  t.is(testModule.counter, 1);
+
+  testModule.increment();
+
+  t.is(store.state.test.counter, 2);
+  t.is(testModule.counter, 2);
+});
