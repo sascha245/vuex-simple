@@ -1,9 +1,9 @@
-import { Container, Token } from 'typedi';
+import { Container } from 'typedi';
 import { Action, Mutation } from 'vuex';
 
 import { applyDecorators } from './metadata';
 import { getStoreBuilder, StoreBuilder } from './store-builder';
-import { DecoratorType, InjectType, ModuleOptions } from './types';
+import { DecoratorType, ModuleOptions } from './types';
 import { decoratorUtil, injectUtil } from './utils';
 
 function handleOptions(options: ModuleOptions | string): ModuleOptions {
@@ -46,16 +46,6 @@ export function Module(pOptions: ModuleOptions | string) {
 export function State() {
   return (target: any, propertyName: string) => {
     decoratorUtil.setDecorator(target, propertyName, DecoratorType.STATE);
-  };
-}
-
-export function Inject(type?: (type?: any) => Function): Function;
-export function Inject(serviceName?: string): Function;
-export function Inject(token: Token<any>): Function;
-
-export function Inject(typeOrName?: InjectType) {
-  return (target: any, propertyName: string, index?: number) => {
-    injectUtil.registerInjection(target, propertyName, typeOrName, index);
   };
 }
 

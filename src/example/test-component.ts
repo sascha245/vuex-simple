@@ -1,4 +1,5 @@
-import { Inject } from '../index';
+import { Inject } from 'typedi';
+
 import { MockComponent } from '../tests/mock-component';
 import { TestModule } from './test-module';
 
