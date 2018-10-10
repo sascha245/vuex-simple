@@ -3,7 +3,6 @@ import { install } from './install';
 export {
   Container,
   Service,
-  Inject,
   Token,
   ServiceOptions,
   ServiceIdentifier,
