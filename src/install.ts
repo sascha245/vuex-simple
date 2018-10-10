@@ -6,7 +6,7 @@ export function install(Vue: any, options: any) {
   Vue.use(Vuex);
   Vue.mixin({
     beforeCreate() {
-      injectUtil.injectAll(this.constructor, this);
+      injectUtil.injectAll(this);
     }
   });
 }

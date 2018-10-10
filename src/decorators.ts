@@ -33,7 +33,7 @@ export function Module(pOptions: ModuleOptions | string) {
 
       applyDecorators<any>(moduleBuilder, instance);
 
-      injectUtil.injectAll(target, instance);
+      injectUtil.injectAll(instance);
 
       Container.set(target, instance);
       singletonInstance = instance;

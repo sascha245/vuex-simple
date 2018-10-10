@@ -13,6 +13,8 @@ export * from './install';
 export * from './decorators';
 export { getStoreBuilder } from './store-builder';
 
+export { injectAll } from './utils/inject-util';
+
 export default {
   install
 };

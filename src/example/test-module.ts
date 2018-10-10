@@ -1,5 +1,4 @@
-import { Getter, Inject } from '../decorators';
-import { Module, Mutation, State } from '../index';
+import { Getter, Inject, Module, Mutation, State } from '../index';
 import { TestApi } from './test-api';
 
 @Module('test')
