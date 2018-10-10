@@ -20,18 +20,21 @@ export class StoreBuilder<State = any> {
     };
   }
 
-  public module<S, R>(namespace: string, state: S): ModuleBuilder<S, State> {
-    const moduleBuilder = new ModuleBuilder(this, namespace, state);
-    if (this._options.modules) {
-      this._options.modules[namespace] = moduleBuilder.module;
-    }
-    return moduleBuilder;
+  public loadModules<T extends { new (...args: any[]): {} }>(modules: T[]) {
+    modules.forEach(moduleClass => {
+      this.loadModule(moduleClass);
+    });
   }
 
-  public loadModules<T extends { new (...args: any[]): {} }>(modules: T[]) {
-    modules.forEach(module => {
-      Container.get(module);
-    });
+  public loadModule<T extends { new (...args: any[]): {} }>(moduleClass: T) {
+    const instance = Container.get(moduleClass);
+    if (instance) {
+      const moduleBuilder: ModuleBuilder = (instance as any).$module;
+      if (this._options.modules) {
+        moduleBuilder.setStoreBuilder(this);
+        this._options.modules[moduleBuilder.namespace] = moduleBuilder.module;
+      }
+    }
   }
 
   public addModule(namespace: string, moduleOptions: Module<any, any>) {

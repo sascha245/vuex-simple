@@ -2,55 +2,70 @@ import { Action as Act, Getter, Mutation as Mut } from 'vuex';
 
 import { ModuleBuilder } from './module-builder';
 import { DecoratorType } from './types';
-import { decoratorUtil } from './utils';
+import { getDecorators } from './utils/decorator-util';
 
-export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
-  const constructor = instance.constructor;
-  const decorators = decoratorUtil.getDecorators(constructor);
-  const proto = constructor.prototype;
+interface DecoratedPrototype {
+  __states__: string[];
+  __getters__: string[];
+  __mutations__: string[];
+  __actions__: string[];
+}
 
-  bindStateToStore(moduleBuilder, instance);
+export function collectDecorators(ctor) {
+  const decorators = getDecorators(ctor);
+  const proto: DecoratedPrototype = ctor.prototype;
 
-  const properties = Object.getOwnPropertyNames(proto);
+  proto.__states__ = [];
+  proto.__getters__ = [];
+  proto.__mutations__ = [];
+  proto.__actions__ = [];
 
-  properties.forEach(key => {
-    if (key === 'constructor') {
-      return;
-    }
-
-    const decorator = decorators.get(key);
-    const descriptor = getMethodDescriptor(proto, key);
-
-    if (decorator) {
-      switch (decorator) {
-        case DecoratorType.GETTER:
-          const accessorDescriptor = Object.getOwnPropertyDescriptor(proto, key);
-          if (accessorDescriptor && typeof accessorDescriptor.get === 'function') {
-            applyGetter(moduleBuilder, instance, constructor, accessorDescriptor, key);
-          }
-          break;
-        case DecoratorType.MUTATION:
-          if (descriptor) {
-            applyMutation<State>(moduleBuilder, instance, constructor, descriptor, key);
-          }
-          break;
-        case DecoratorType.ACTION:
-          if (descriptor) {
-            applyAction<State>(moduleBuilder, instance, constructor, descriptor, key);
-          }
-          break;
-      }
+  decorators.forEach((decorator, key) => {
+    switch (decorator) {
+      case DecoratorType.STATE:
+        proto.__states__.push(key);
+        break;
+      case DecoratorType.GETTER:
+        proto.__getters__.push(key);
+        break;
+      case DecoratorType.MUTATION:
+        proto.__mutations__.push(key);
+        break;
+      case DecoratorType.ACTION:
+        proto.__actions__.push(key);
+        break;
     }
   });
 }
 
-export function getInitialState(instance: any) {
-  const state: object = {};
-  const properties = findStateProperties(instance);
-  properties.forEach(propertyName => {
-    state[propertyName] = instance[propertyName];
+export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
+  const constructor = instance.constructor;
+  const proto: DecoratedPrototype = constructor.prototype;
+
+  proto.__states__.forEach(propertyName => {
+    applyState(moduleBuilder, instance, propertyName);
   });
-  return state;
+
+  proto.__getters__.forEach(propertyName => {
+    const accessorDescriptor = Object.getOwnPropertyDescriptor(proto, propertyName);
+    if (accessorDescriptor && typeof accessorDescriptor.get === 'function') {
+      applyGetter(moduleBuilder, instance, accessorDescriptor, propertyName);
+    }
+  });
+
+  proto.__mutations__.forEach(propertyName => {
+    const descriptor = getMethodDescriptor(proto, propertyName);
+    if (descriptor) {
+      applyMutation<State>(moduleBuilder, instance, descriptor, propertyName);
+    }
+  });
+
+  proto.__actions__.forEach(propertyName => {
+    const descriptor = getMethodDescriptor(proto, propertyName);
+    if (descriptor) {
+      applyAction<State>(moduleBuilder, instance, descriptor, propertyName);
+    }
+  });
 }
 
 function getMethodDescriptor(prototype: any, propertyName: string) {
@@ -61,80 +76,68 @@ function getMethodDescriptor(prototype: any, propertyName: string) {
   return undefined;
 }
 
-function findStateProperties(instance: any) {
-  const properties: string[] = [];
-
-  const constructor = instance.constructor;
-  const decorators = decoratorUtil.getDecorators(constructor);
-  const keys = Object.keys(instance);
-
-  keys.forEach(propertyName => {
-    const decorator = decorators.get(propertyName);
-    if (decorator && decorator === DecoratorType.STATE) {
-      properties.push(propertyName);
-    }
-  });
-  return properties;
-}
-
-function bindStateToStore<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
-  const properties = findStateProperties(instance);
-  properties.forEach(propertyName => {
-    Object.defineProperty(instance, propertyName, {
-      get() {
-        return moduleBuilder.state()[propertyName];
-      },
-      set(val: any) {
-        moduleBuilder.state()[propertyName] = val;
-      }
-    });
-  });
-}
-
-function applyMutation<State>(
+function applyState<State>(
   moduleBuilder: ModuleBuilder<State, any>,
   instance: any,
-  constructor: any,
-  descriptor: PropertyDescriptor,
   propertyName: string
 ) {
-  let mutationFunction: Function = descriptor.value ? descriptor.value : (payload: any) => ({});
-  mutationFunction = mutationFunction.bind(instance);
-  const mutation: Mut<State> = (state, payload) => {
-    mutationFunction(payload);
-  };
-  moduleBuilder.addMutation(propertyName, mutation);
-
-  constructor.prototype[propertyName] = (payload: any) => {
-    moduleBuilder.commit(propertyName, payload);
-  };
+  const value = instance[propertyName];
+  Object.defineProperty(instance, propertyName, {
+    get() {
+      return moduleBuilder.state()[propertyName];
+    },
+    set(val: any) {
+      moduleBuilder.state()[propertyName] = val;
+    }
+  });
+  instance[propertyName] = value;
 }
 
 function applyGetter<State>(
   moduleBuilder: ModuleBuilder<State, any>,
   instance: any,
-  constructor: any,
   descriptor: PropertyDescriptor,
   propertyName: string
 ) {
   let getterFunction: Function = descriptor.get ? descriptor.get : (state: any) => ({});
   getterFunction = getterFunction.bind(instance);
+
   const getter: Getter<State, any> = state => {
     return getterFunction();
   };
   moduleBuilder.addGetter(propertyName, getter);
 
-  Object.defineProperty(constructor.prototype, propertyName, {
+  Object.defineProperty(instance, propertyName, {
     get() {
       return moduleBuilder.read(propertyName);
     }
   });
 }
 
+function applyMutation<State>(
+  moduleBuilder: ModuleBuilder<State, any>,
+  instance: any,
+  descriptor: PropertyDescriptor,
+  propertyName: string
+) {
+  let mutationFunction: Function = descriptor.value
+    ? descriptor.value
+    : (payload: any) => undefined;
+  mutationFunction = mutationFunction.bind(instance);
+
+  const mutation: Mut<State> = (state, payload) => {
+    mutationFunction(payload);
+  };
+  moduleBuilder.addMutation(propertyName, mutation);
+
+  instance[propertyName] = (payload: any) => {
+    moduleBuilder.commit(propertyName, payload);
+  };
+}
+
 function applyAction<State>(
   moduleBuilder: ModuleBuilder<State, any>,
   instance: any,
-  constructor: any,
   descriptor: PropertyDescriptor,
   propertyName: string
 ) {
@@ -142,13 +145,14 @@ function applyAction<State>(
     ? descriptor.value
     : (payload: any) => Promise.resolve();
   actionFunction = actionFunction.bind(instance);
+
   const action: Act<State, any> = (context, payload) => {
     return actionFunction(payload);
   };
 
   moduleBuilder.addAction(propertyName, action);
 
-  constructor.prototype[propertyName] = (payload: any) => {
+  instance[propertyName] = (payload: any) => {
     return moduleBuilder.dispatch(propertyName, payload);
   };
 }

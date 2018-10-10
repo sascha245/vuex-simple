@@ -8,7 +8,7 @@ const KEY = '__injections__';
  * Thrown when DI cannot inject value into property decorated by @Inject decorator.
  */
 export class CannotInjectError extends Error {
-  public name = 'ServiceNotFoundError';
+  public name = 'CannotInjectError';
 
   constructor(target: Object, propertyName: string) {
     super(

@@ -3,12 +3,11 @@ import { Action, Getter, Module, Mutation } from 'vuex';
 import { StoreBuilder } from './store-builder';
 
 export class ModuleBuilder<State = any, RootState = any> {
-  private _storeBuilder!: StoreBuilder<RootState>;
+  private _storeBuilder?: StoreBuilder<RootState>;
   private _module: Module<State, RootState>;
   private _namespace: string;
 
-  constructor(storeBuilder: StoreBuilder<RootState>, namespace: string, state: State) {
-    this._storeBuilder = storeBuilder;
+  constructor(namespace: string, state: State) {
     this._namespace = namespace;
     this._module = {
       actions: {},
@@ -19,10 +18,8 @@ export class ModuleBuilder<State = any, RootState = any> {
     };
   }
 
-  public state() {
-    return this._storeBuilder && this._storeBuilder.store
-      ? this._storeBuilder.store.state[this._namespace]
-      : this._module.state;
+  public setStoreBuilder(storeBuilder: StoreBuilder<RootState>) {
+    this._storeBuilder = storeBuilder;
   }
 
   public addAction(name: string, action: Action<State, RootState>) {
@@ -39,6 +36,12 @@ export class ModuleBuilder<State = any, RootState = any> {
     if (this._module.getters) {
       this._module.getters[name] = getter;
     }
+  }
+
+  public state() {
+    return this._storeBuilder && this._storeBuilder.store
+      ? this._storeBuilder.store.state[this._namespace]
+      : this._module.state;
   }
 
   public commit(name: string, payload: any) {
