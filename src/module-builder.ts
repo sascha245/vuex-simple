@@ -7,11 +7,7 @@ export class ModuleBuilder<State = any, RootState = any> {
   private _module: Module<State, RootState>;
   private _namespace: string;
 
-  constructor(
-    storeBuilder: StoreBuilder<RootState>,
-    namespace: string,
-    state: State
-  ) {
+  constructor(storeBuilder: StoreBuilder<RootState>, namespace: string, state: State) {
     this._storeBuilder = storeBuilder;
     this._namespace = namespace;
     this._module = {
@@ -21,6 +17,12 @@ export class ModuleBuilder<State = any, RootState = any> {
       namespaced: true,
       state
     };
+  }
+
+  public state() {
+    return this._storeBuilder && this._storeBuilder.store
+      ? this._storeBuilder.store.state[this._namespace]
+      : this._module.state;
   }
 
   public addAction(name: string, action: Action<State, RootState>) {
@@ -41,10 +43,7 @@ export class ModuleBuilder<State = any, RootState = any> {
 
   public commit(name: string, payload: any) {
     if (this._storeBuilder && this._storeBuilder.store) {
-      return this._storeBuilder.store.commit(
-        this.namespace + '/' + name,
-        payload
-      );
+      return this._storeBuilder.store.commit(this.namespace + '/' + name, payload);
     } else {
       throw new Error('Could not commit: no store created');
     }
@@ -60,10 +59,7 @@ export class ModuleBuilder<State = any, RootState = any> {
 
   public dispatch(name: string, payload: any) {
     if (this._storeBuilder && this._storeBuilder.store) {
-      return this._storeBuilder.store.dispatch(
-        this.namespace + '/' + name,
-        payload
-      );
+      return this._storeBuilder.store.dispatch(this.namespace + '/' + name, payload);
     } else {
       throw new Error('Could not dispatch: no store created');
     }

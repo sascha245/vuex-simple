@@ -39,7 +39,12 @@ export function registerInjection(
   });
 }
 
-export function injectAll(target: any, instance: any): void {
+/**
+ * Inject all properties marked with @Inject() for the given class instance
+ * @param instance Class instance
+ */
+export function injectAll(instance: any): void {
+  const target = instance.constructor;
   const injections = getInjections(target);
   if (injections) {
     injections.forEach(injection => {

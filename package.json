@@ -1,6 +1,6 @@
 {
   "name": "vuex-simple",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simpler way to write your Vuex store in Typescript",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
@@ -95,9 +95,6 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
-  },
-  "prettier": {
-    "singleQuote": true
   },
   "nyc": {
     "exclude": [

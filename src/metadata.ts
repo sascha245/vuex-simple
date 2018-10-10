@@ -18,7 +18,7 @@ export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>,
   const decorators = decoratorUtil.getDecorators(constructor);
   const proto = constructor.prototype;
 
-  applyStates(instance);
+  applyStates(moduleBuilder, instance);
 
   const properties = Object.getOwnPropertyNames(proto);
 
@@ -53,7 +53,7 @@ export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>,
   });
 }
 
-function applyStates(instance: any) {
+function applyStates<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
   const constructor = instance.constructor;
   const decorators = decoratorUtil.getDecorators(constructor);
   const keys = Object.keys(instance);
@@ -61,15 +61,15 @@ function applyStates(instance: any) {
   keys.forEach(propertyName => {
     const decorator = decorators.get(propertyName);
     if (decorator && decorator === DecoratorType.STATE) {
-      Vue.set(instance.__state__, propertyName, instance[propertyName]);
       Object.defineProperty(instance, propertyName, {
         get() {
-          return instance.__state__[propertyName];
+          return moduleBuilder.state()[propertyName];
         },
         set(val: any) {
-          instance.__state__[propertyName] = val;
+          moduleBuilder.state()[propertyName] = val;
         }
       });
+      Vue.set(instance, propertyName, instance[propertyName]);
     }
   });
 }
@@ -128,6 +128,7 @@ function applyAction<State>(
   const action: Act<State, any> = (context, payload) => {
     return actionFunction(payload);
   };
+
   moduleBuilder.addAction(propertyName, action);
 
   constructor.prototype[propertyName] = (payload: any) => {

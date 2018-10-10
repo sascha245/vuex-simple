@@ -4,6 +4,7 @@ import test from 'ava';
 import { Container } from 'typedi';
 import Vue from 'vue';
 
+import { MyComponent } from '../example/test-component';
 import { TestModule } from '../example/test-module';
 import VuexSimple, { getStoreBuilder } from '../index';
 
@@ -51,15 +52,46 @@ test.serial('simple incrementAsync', async t => {
   t.is(testModule.counter, 1);
 });
 
-test.serial('simple injection test', async t => {
+test.serial('store replaceState', async t => {
+  const testModule = Container.get(TestModule);
+
+  t.is(testModule.counter, 0);
+  testModule.increment();
+  testModule.increment();
+  testModule.increment();
+  t.is(testModule.counter, 3);
+
+  const storeBuilder = getStoreBuilder();
+  const store = storeBuilder.store;
+
+  const newState = JSON.parse(JSON.stringify(store.state));
+  newState.test.counter = 1;
+  store.replaceState(newState);
+
+  t.is(store.state.test.counter, 1);
+  t.is(testModule.counter, 1);
+
+  testModule.increment();
+
+  t.is(store.state.test.counter, 2);
+  t.is(testModule.counter, 2);
+});
+
+test.serial('injection in module', async t => {
   const testModule = Container.get(TestModule);
 
   t.is(testModule.counter, 0);
 
   const p = testModule.countItems();
-  t.notThrowsAsync(() => p);
-
-  await p;
+  await t.notThrowsAsync(() => p);
 
   t.is(testModule.counter, 42);
+});
+
+test.serial('injection in component', async t => {
+  const testModule = Container.get(TestModule);
+  const myComponent = new MyComponent();
+
+  t.not(myComponent.testModule, undefined);
+  t.is(myComponent.testModule, testModule);
 });
