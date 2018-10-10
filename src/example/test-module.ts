@@ -1,6 +1,4 @@
-import { Inject } from 'typedi';
-
-import { Getter, Module, Mutation, State } from '../index';
+import { Getter, Inject, Module, Mutation, State } from '../index';
 import { TestApi } from './test-api';
 
 @Module('test')

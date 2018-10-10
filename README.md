@@ -190,25 +190,6 @@ storeBuilder.addModule(namespace: string, module: Vuex.Module);
 
 **Note:** We can't configure the root of the store **for now**. The store is also set to use strict mode by default.
 
-#### Injections in custom classes
-
-Sometimes you want to be able to inject a service or module in your class without it having to be a service / module itself.
-You can now use `injectAll` to do this.
-
-```ts
-import { Inject, injectAll } from 'vuex-simple';
-
-class MyInjectable {
-
-  @Inject()
-  public counterModule!: CounterModule;
-
-  constructor() {
-    // Once this function is called it will inject all your properties marked with @Inject()
-    injectAll(this);
-  }
-}
-```
 
 ## Contributors
 
@@ -216,8 +197,8 @@ If you are interested and want to help out, don't hesitate to contact me or to c
 
 ## Bugs
 
-The core features presented should be stable and tested.
-However, if a bug occurs, don't hesitate to open a ticket. I will try to fix it as fast as possible.
+The core features presented should be stable.
+But as this module is still in development, it will probably still have some bugs here and there.
 
 ## License
 
