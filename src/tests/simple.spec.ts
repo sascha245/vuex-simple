@@ -13,16 +13,34 @@ Vue.use(VuexSimple);
 test.before(t => {
   const storeBuilder = getStoreBuilder();
   storeBuilder.loadModules([TestModule]);
-  storeBuilder.create();
+  const store = storeBuilder.create();
+
+  // create snapshot of initial state
+  (t as any).context.snapshot = JSON.stringify(store.state);
 });
 
 test.beforeEach(t => {
+  const storeBuilder = getStoreBuilder();
+  const store = storeBuilder.create();
+
+  // reset store
+  store.replaceState(JSON.parse((t as any).context.snapshot));
+});
+
+test.serial('initial state', t => {
   const testModule = Container.get(TestModule);
-  testModule.setCounter(0);
+
+  t.is(testModule.counter, 10);
+  t.is(testModule.name, 'Will');
 });
 
 test.serial('simple increment', t => {
   const testModule = Container.get(TestModule);
+
+  t.is(testModule.counter, 10);
+
+  testModule.setCounter(0);
+
   t.is(testModule.counter, 0);
   t.notThrows(() => testModule.increment());
   t.is(testModule.counter, 1);
@@ -30,6 +48,8 @@ test.serial('simple increment', t => {
 
 test.serial('simple computed getters', t => {
   const testModule = Container.get(TestModule);
+  testModule.setCounter(0);
+
   t.not(testModule.normalGetter, testModule.normalGetter);
   t.is(testModule.cachedGetter, testModule.cachedGetter);
   t.is(testModule.cachedGetter.item, 100);
@@ -41,6 +61,7 @@ test.serial('simple computed getters', t => {
 
 test.serial('simple incrementAsync', async t => {
   const testModule = Container.get(TestModule);
+  testModule.setCounter(0);
 
   t.is(testModule.counter, 0);
 
@@ -54,6 +75,7 @@ test.serial('simple incrementAsync', async t => {
 
 test.serial('store replaceState', async t => {
   const testModule = Container.get(TestModule);
+  testModule.setCounter(0);
 
   t.is(testModule.counter, 0);
   testModule.increment();
@@ -79,6 +101,7 @@ test.serial('store replaceState', async t => {
 
 test.serial('injection in module', async t => {
   const testModule = Container.get(TestModule);
+  testModule.setCounter(0);
 
   t.is(testModule.counter, 0);
 
@@ -88,7 +111,7 @@ test.serial('injection in module', async t => {
   t.is(testModule.counter, 42);
 });
 
-test.serial('injection in component', async t => {
+test.serial('injection in non vue component', async t => {
   const testModule = Container.get(TestModule);
   const myComponent = new MyComponent();
 

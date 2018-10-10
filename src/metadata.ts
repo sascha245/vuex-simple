@@ -1,24 +1,15 @@
-import Vue from 'vue';
 import { Action as Act, Getter, Mutation as Mut } from 'vuex';
 
 import { ModuleBuilder } from './module-builder';
 import { DecoratorType } from './types';
 import { decoratorUtil } from './utils';
 
-function getMethodDescriptor(prototype: any, propertyName: string) {
-  const descriptor = Object.getOwnPropertyDescriptor(prototype, propertyName);
-  if (descriptor && typeof descriptor.value === 'function') {
-    return descriptor;
-  }
-  return undefined;
-}
-
 export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
   const constructor = instance.constructor;
   const decorators = decoratorUtil.getDecorators(constructor);
   const proto = constructor.prototype;
 
-  applyStates(moduleBuilder, instance);
+  bindStateToStore(moduleBuilder, instance);
 
   const properties = Object.getOwnPropertyNames(proto);
 
@@ -53,7 +44,26 @@ export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>,
   });
 }
 
-function applyStates<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
+export function getInitialState(instance: any) {
+  const state: object = {};
+  const properties = findStateProperties(instance);
+  properties.forEach(propertyName => {
+    state[propertyName] = instance[propertyName];
+  });
+  return state;
+}
+
+function getMethodDescriptor(prototype: any, propertyName: string) {
+  const descriptor = Object.getOwnPropertyDescriptor(prototype, propertyName);
+  if (descriptor && typeof descriptor.value === 'function') {
+    return descriptor;
+  }
+  return undefined;
+}
+
+function findStateProperties(instance: any) {
+  const properties: string[] = [];
+
   const constructor = instance.constructor;
   const decorators = decoratorUtil.getDecorators(constructor);
   const keys = Object.keys(instance);
@@ -61,16 +71,23 @@ function applyStates<State>(moduleBuilder: ModuleBuilder<State, any>, instance: 
   keys.forEach(propertyName => {
     const decorator = decorators.get(propertyName);
     if (decorator && decorator === DecoratorType.STATE) {
-      Object.defineProperty(instance, propertyName, {
-        get() {
-          return moduleBuilder.state()[propertyName];
-        },
-        set(val: any) {
-          moduleBuilder.state()[propertyName] = val;
-        }
-      });
-      Vue.set(instance, propertyName, instance[propertyName]);
+      properties.push(propertyName);
     }
+  });
+  return properties;
+}
+
+function bindStateToStore<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
+  const properties = findStateProperties(instance);
+  properties.forEach(propertyName => {
+    Object.defineProperty(instance, propertyName, {
+      get() {
+        return moduleBuilder.state()[propertyName];
+      },
+      set(val: any) {
+        moduleBuilder.state()[propertyName] = val;
+      }
+    });
   });
 }
 

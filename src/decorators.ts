@@ -1,7 +1,7 @@
 import { Container, Token } from 'typedi';
 import { Action, Mutation } from 'vuex';
 
-import { applyDecorators } from './metadata';
+import { applyDecorators, getInitialState } from './metadata';
 import { getStoreBuilder, StoreBuilder } from './store-builder';
 import { DecoratorType, InjectType, ModuleOptions } from './types';
 import { decoratorUtil, injectUtil } from './utils';
@@ -28,8 +28,9 @@ export function Module(pOptions: ModuleOptions | string) {
 
       const options = handleOptions(pOptions);
       const storeBuilder: StoreBuilder<any> = getStoreBuilder();
+      const initialState = getInitialState(instance);
 
-      const moduleBuilder = storeBuilder.module(options.namespace, {});
+      const moduleBuilder = storeBuilder.module(options.namespace, initialState);
 
       applyDecorators<any>(moduleBuilder, instance);
 

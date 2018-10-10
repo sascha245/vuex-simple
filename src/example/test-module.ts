@@ -7,7 +7,10 @@ export class TestModule {
   private testApi!: TestApi;
 
   @State()
-  public counter: number = 0;
+  public counter: number = 10;
+
+  @State()
+  public name: string = 'Will';
 
   @Getter()
   public get cachedGetter() {
