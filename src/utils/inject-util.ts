@@ -1,4 +1,4 @@
-import { Container, Token } from 'typedi';
+import { Container, ContainerInstance, Token } from 'typedi';
 
 import { Injection } from '../types';
 
@@ -43,9 +43,10 @@ export function registerInjection(
  * Inject all properties marked with @Inject() for the given class instance
  * @param instance Class instance
  */
-export function injectAll(instance: any): void {
+export function injectAll(instance: any, container?: ContainerInstance): void {
   const target = instance.constructor;
   const injections = getInjections(target);
+
   if (injections) {
     injections.forEach(injection => {
       const { typeOrName, propertyName } = injection;
@@ -63,7 +64,11 @@ export function injectAll(instance: any): void {
         throw new CannotInjectError(this, propertyName);
       }
 
-      instance[propertyName] = Container.get<any>(identifier);
+      if (container && container.has(identifier)) {
+        instance[propertyName] = container.get<any>(identifier);
+      } else {
+        instance[propertyName] = Container.get<any>(identifier);
+      }
     });
   }
 }

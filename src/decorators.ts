@@ -1,9 +1,9 @@
-import { Container, Token } from 'typedi';
+import { Token } from 'typedi';
 import { Action, Mutation } from 'vuex';
 
 import { applyDecorators, collectDecorators } from './metadata';
 import { ModuleBuilder } from './module-builder';
-import { DecoratorType, InjectType, ModuleOptions } from './types';
+import { DecoratorType, InjectType, ModuleInternals, ModuleOptions } from './types';
 import { decoratorUtil, injectUtil } from './utils';
 
 function handleOptions(options: ModuleOptions | string): ModuleOptions {
@@ -28,13 +28,9 @@ export function Module(pOptions: ModuleOptions | string) {
 
       applyDecorators<any>(moduleBuilder, instance);
 
-      (instance as any).$module = moduleBuilder;
+      (instance as ModuleInternals).__moduleBuilder__ = moduleBuilder;
 
       injectUtil.injectAll(instance);
-
-      if (!Container.get(target)) {
-        Container.set(target, instance);
-      }
 
       return instance;
     } as any;

@@ -1,9 +1,11 @@
-import { Container } from 'typedi';
+import { Container, ContainerInstance } from 'typedi';
 import { Module, Store, StoreOptions } from 'vuex';
 
 import { ModuleBuilder } from './module-builder';
+import { ModuleInternals, StoreInternals } from './types';
 
 interface StoreBuilderOptions<R> {
+  container?: ContainerInstance;
   strict?: boolean;
   state: R;
 }
@@ -11,13 +13,23 @@ interface StoreBuilderOptions<R> {
 export class StoreBuilder<State = any> {
   private _options: StoreOptions<State>;
   private _store?: Store<State>;
+  private _container: ContainerInstance;
 
   constructor(options: StoreBuilderOptions<State>) {
+    this._container = options.container || Container.of(undefined);
     this._options = {
       modules: {},
       state: options.state,
       strict: options.strict
     };
+  }
+
+  public get container() {
+    return this._container;
+  }
+
+  public useContainer(container: ContainerInstance) {
+    this._container = container;
   }
 
   public loadModules<T extends { new (...args: any[]): {} }>(modules: T[]) {
@@ -27,13 +39,15 @@ export class StoreBuilder<State = any> {
   }
 
   public loadModule<T extends { new (...args: any[]): {} }>(moduleClass: T) {
-    const instance = Container.get(moduleClass);
-    if (instance) {
-      const moduleBuilder: ModuleBuilder = (instance as any).$module;
-      if (this._options.modules) {
-        moduleBuilder.setStoreBuilder(this);
-        this._options.modules[moduleBuilder.namespace] = moduleBuilder.module;
-      }
+    let instance = this._container.get(moduleClass);
+    if (!instance) {
+      instance = new moduleClass();
+      this._container.set(moduleClass, instance);
+    }
+    const moduleBuilder: ModuleBuilder = (instance as ModuleInternals).__moduleBuilder__;
+    if (this._options.modules) {
+      moduleBuilder.setStoreBuilder(this);
+      this._options.modules[moduleBuilder.namespace] = moduleBuilder.module;
     }
   }
 
@@ -45,6 +59,7 @@ export class StoreBuilder<State = any> {
 
   public create() {
     this._store = new Store(this._options);
+    ((this._store as unknown) as StoreInternals).__storeBuilder__ = this;
     return this._store;
   }
 
@@ -59,7 +74,7 @@ const storeBuilderSingleton = new StoreBuilder({
 });
 const namedStoreBuilderMap: {
   [name: string]: StoreBuilder<any>;
-} = Object.create(null);
+} = {};
 
 export function getStoreBuilder(name?: string): StoreBuilder {
   // the default store builder

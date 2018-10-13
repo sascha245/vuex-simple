@@ -169,7 +169,16 @@ So for now `@Action` is still included, but it may happen that it is removed in 
 #### How to setup your store
 
 1. Use `Vue.use(VuexSimple)`
-2. Use the StoreBuilder to load your modules
+2. (optional) Use a custom container instance. Be careful to set the container before you load your modules!
+
+```ts
+
+const myContainer = Container.of('myContainer');
+const storeBuilder = getStoreBuilder();
+storeBuilder.useContainer(myContainer);
+```
+
+3. Use the StoreBuilder to load your modules
 
 ```ts
 const storeBuilder = getStoreBuilder();
@@ -178,14 +187,14 @@ storeBuilder.loadModules([
 ]);
 ```
 
-3. (optional) Add your existing vuex modules: they will still work normally
+4. (optional) Add your existing vuex modules: they will still work normally
 
 ```ts
 const storeBuilder = getStoreBuilder();
 storeBuilder.addModule(namespace: string, module: Vuex.Module);
 ```
 
-4. We finish by creating the store with `storeBuilder.create()`
+5. We finish by creating the store with `storeBuilder.create()`
 
 
 **Note:** We can't configure the root of the store **for now**. The store is also set to use strict mode by default.
