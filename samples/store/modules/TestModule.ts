@@ -1,16 +1,17 @@
-import { Getter, Inject, Module, Mutation, State } from '../index';
-import { TestApi } from './test-api';
+// import { Inject } from "typedi";
+import { Getter, Inject, Module, Mutation, State } from "../../../src";
+import { TestService } from "../services/TestService";
 
-@Module('test')
+@Module("test")
 export class TestModule {
   @Inject()
-  private testApi!: TestApi;
+  private testService!: TestService;
 
   @State()
   public counter: number = 10;
 
   @State()
-  public name: string = 'Will';
+  public name: string = "Will";
 
   @Getter()
   public get cachedGetter() {
@@ -36,7 +37,7 @@ export class TestModule {
   }
 
   public async countItems() {
-    const count = await this.testApi.countItems();
+    const count = await this.testService.countItems();
     this.setCounter(count);
   }
 

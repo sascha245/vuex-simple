@@ -1,4 +1,6 @@
 import { Container, ContainerInstance, Token } from 'typedi';
+import Vue from 'vue';
+import { createDecorator } from 'vue-class-component';
 
 import { Injection } from '../types';
 
@@ -25,18 +27,15 @@ export function registerInjection(
   typeOrName?: any,
   index?: number
 ) {
-  let injections = getInjections(target.constructor);
-  if (!injections) {
-    injections = initializeInjections(target.constructor);
+  if (target instanceof Vue) {
+    const decorator = createDecorator(options => {
+      addInjection(target, options, propertyName, typeOrName, index);
+    });
+    decorator(target, propertyName, index!);
+    return;
   }
-  if (!typeOrName) {
-    typeOrName = () => (Reflect as any).getMetadata('design:type', target, propertyName);
-  }
-  injections.push({
-    index,
-    propertyName,
-    typeOrName
-  });
+  // still support injection outside of vue components for backward compatibility
+  addInjection(target, target.constructor, propertyName, typeOrName, index);
 }
 
 /**
@@ -44,7 +43,7 @@ export function registerInjection(
  * @param instance Class instance
  */
 export function injectAll(instance: any, container?: ContainerInstance): void {
-  const target = instance.constructor;
+  const target = instance instanceof Vue ? instance.$options : instance.constructor;
   const injections = getInjections(target);
 
   if (injections) {
@@ -73,10 +72,31 @@ export function injectAll(instance: any, container?: ContainerInstance): void {
   }
 }
 
-export function initializeInjections(ctor: any): Injection[] {
+function initializeInjections(ctor: any): Injection[] {
   return (ctor[KEY] = []);
 }
 
-export function getInjections(ctor: any): Injection[] | undefined {
+function getInjections(ctor: any): Injection[] | undefined {
   return ctor[KEY];
+}
+
+function addInjection(
+  target: any,
+  ctor: any,
+  propertyName: string,
+  typeOrName?: any,
+  index?: number
+): void {
+  let injections = getInjections(ctor);
+  if (!injections) {
+    injections = initializeInjections(ctor);
+  }
+  if (!typeOrName) {
+    typeOrName = () => (Reflect as any).getMetadata('design:type', target, propertyName);
+  }
+  injections.push({
+    index,
+    propertyName,
+    typeOrName
+  });
 }

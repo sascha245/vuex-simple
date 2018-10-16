@@ -1,15 +1,15 @@
+import Vue from 'vue';
 import Vuex from 'vuex';
 
 import { StoreInternals } from './types';
 import { injectUtil } from './utils';
 
-export function install(Vue: any, options: any) {
-  Vue.use(Vuex);
-  Vue.mixin({
+export function install(vue: any, options: any) {
+  vue.use(Vuex);
+  vue.mixin({
     beforeCreate() {
       let container;
-      const store = this.$store;
-      if (store) {
+      if (this.$store) {
         const storeBuilder = ((this.$store as unknown) as StoreInternals).__storeBuilder__;
         container = storeBuilder ? storeBuilder.container : undefined;
       }
