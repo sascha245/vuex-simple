@@ -1,34 +1,16 @@
 // import { Inject } from "typedi";
-import { Getter, Inject, Module, Mutation, State } from "../../../src";
-import { TestService } from "../services/TestService";
+import { Inject, Module, Mutation } from '../../../src';
+import { TestService } from '../services/TestService';
+import { TestMutations } from './TestMutations';
 
-@Module("test")
-export class TestModule {
+@Module('test')
+export class TestModule extends TestMutations {
   @Inject()
   private testService!: TestService;
 
-  @State()
-  public counter: number = 10;
-
-  @State()
-  public name: string = "Will";
-
-  @Getter()
-  public get cachedGetter() {
-    return {
-      item: this.counter + 100
-    };
-  }
-
-  public get normalGetter() {
-    return {
-      item: this.counter + 100
-    };
-  }
-
   @Mutation()
-  public increment() {
-    this.counter++;
+  public setCounter(count: number) {
+    this.counter = count;
   }
 
   public async asyncIncrement() {
@@ -39,10 +21,5 @@ export class TestModule {
   public async countItems() {
     const count = await this.testService.countItems();
     this.setCounter(count);
-  }
-
-  @Mutation()
-  public setCounter(count: number) {
-    this.counter = count;
   }
 }

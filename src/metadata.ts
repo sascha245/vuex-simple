@@ -47,33 +47,16 @@ export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>,
   });
 
   proto.__getters__.forEach(propertyName => {
-    const accessorDescriptor = Object.getOwnPropertyDescriptor(proto, propertyName);
-    if (accessorDescriptor && typeof accessorDescriptor.get === 'function') {
-      applyGetter(moduleBuilder, instance, accessorDescriptor, propertyName);
-    }
+    applyGetter(moduleBuilder, instance, propertyName);
   });
 
   proto.__mutations__.forEach(propertyName => {
-    const descriptor = getMethodDescriptor(proto, propertyName);
-    if (descriptor) {
-      applyMutation<State>(moduleBuilder, instance, descriptor, propertyName);
-    }
+    applyMutation<State>(moduleBuilder, instance, propertyName);
   });
 
   proto.__actions__.forEach(propertyName => {
-    const descriptor = getMethodDescriptor(proto, propertyName);
-    if (descriptor) {
-      applyAction<State>(moduleBuilder, instance, descriptor, propertyName);
-    }
+    applyAction<State>(moduleBuilder, instance, propertyName);
   });
-}
-
-function getMethodDescriptor(prototype: any, propertyName: string) {
-  const descriptor = Object.getOwnPropertyDescriptor(prototype, propertyName);
-  if (descriptor && typeof descriptor.value === 'function') {
-    return descriptor;
-  }
-  return undefined;
 }
 
 function applyState<State>(
@@ -96,10 +79,9 @@ function applyState<State>(
 function applyGetter<State>(
   moduleBuilder: ModuleBuilder<State, any>,
   instance: any,
-  descriptor: PropertyDescriptor,
   propertyName: string
 ) {
-  let getterFunction: Function = descriptor.get ? descriptor.get : (state: any) => ({});
+  let getterFunction = instance.__lookupGetter__(propertyName) || ((state: any) => ({}));
   getterFunction = getterFunction.bind(instance);
 
   const getter: Getter<State, any> = state => {
@@ -117,12 +99,9 @@ function applyGetter<State>(
 function applyMutation<State>(
   moduleBuilder: ModuleBuilder<State, any>,
   instance: any,
-  descriptor: PropertyDescriptor,
   propertyName: string
 ) {
-  let mutationFunction: Function = descriptor.value
-    ? descriptor.value
-    : (payload: any) => undefined;
+  let mutationFunction: Function = instance[propertyName] || ((payload: any) => undefined);
   mutationFunction = mutationFunction.bind(instance);
 
   const mutation: Mut<State> = (state, payload) => {
@@ -138,12 +117,9 @@ function applyMutation<State>(
 function applyAction<State>(
   moduleBuilder: ModuleBuilder<State, any>,
   instance: any,
-  descriptor: PropertyDescriptor,
   propertyName: string
 ) {
-  let actionFunction: Function = descriptor.value
-    ? descriptor.value
-    : (payload: any) => Promise.resolve();
+  let actionFunction: Function = instance[propertyName] || ((payload: any) => Promise.resolve());
   actionFunction = actionFunction.bind(instance);
 
   const action: Act<State, any> = (context, payload) => {
