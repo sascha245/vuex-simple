@@ -169,16 +169,61 @@ So for now `@Action` is still included, but it may happen that it is removed in 
 #### How to setup your store
 
 1. Use `Vue.use(VuexSimple)`
-2. (optional) Use a custom container instance. Be careful to set the container before you load your modules!
+
+2. Get a StoreBuilder instance.
+
+```ts
+// 1. Use getStoreBuilder()
+const storeBuilder = getStoreBuilder();
+
+// 2. Create a new instance yourself
+const storeBuilder = new StoreBuilder();
+
+```
+
+**Note:** `getStoreBuilder()` always returns the same instance
+
+3. (optional) Initialize your store options.
+
+```ts
+
+// 1. When using getStoreBuilder()
+const storeBuilder = getStoreBuilder();
+storeBuilder.initialize({
+  modules: {},
+  state: {},
+  strict: false
+})
+
+// 2. Pass directly in the StoreBuilder constructor
+const storeBuilder = new StoreBuilder({
+  modules: {},
+  state: {},
+  strict: false
+});
+
+```
+
+4. (optional) You can also use a custom container instance.
 
 ```ts
 
 const myContainer = Container.of('myContainer');
 const storeBuilder = getStoreBuilder();
+
+// 1. Using the initialize function or in the StoreBuilder constructor
+storeBuilder.initialize({
+  container: myContainer
+})
+
+// 2. Using the 'useContainer' function
 storeBuilder.useContainer(myContainer);
+
 ```
 
-3. Use the StoreBuilder to load your modules
+**Note:** Be careful to set the container before you load your modules!
+
+5. Use the StoreBuilder to load your modules
 
 ```ts
 const storeBuilder = getStoreBuilder();
@@ -187,22 +232,69 @@ storeBuilder.loadModules([
 ]);
 ```
 
-4. (optional) Add your existing vuex modules: they will still work normally
+6. We finish by creating the store with `storeBuilder.create()`
+
+
+## FAQ
+
+**How to split up your modules:**</br>
+There are different ways to split up your modules:
+1. Do all the heavy lifting (like API requests and such) in other files or services and inject them in your module
+2. Split up your modules into smaller modules. If necessary, you can also inject other modules into your main module.
+
+In the case the 2 solutions above don't work out for you, you can also use inheritance to split up your files, though it isn't the most recommended way:
 
 ```ts
-const storeBuilder = getStoreBuilder();
-storeBuilder.addModule(namespace: string, module: Vuex.Module);
+class CounterState {
+  @State()
+  public counter: number = 10;
+}
+
+class CounterGetters extends CounterState {
+  @Getter()
+  public get counterPlusHundred() {
+    return this.counter + 100;
+  }
+}
+
+class CounterMutations extends CounterGetters {
+  @Mutation()
+  public increment() {
+    this.counter++;
+  }
+}
+
+class CounterActions extends CounterMutations {
+  public async incrementAsync() {
+    await new Promise(r => setTimeout(r, 500));
+    this.increment();
+  }
+}
+
+@Module('counter')
+class CounterModule extends CounterActions {}
 ```
-
-5. We finish by creating the store with `storeBuilder.create()`
-
-
-**Note:** We can't configure the root of the store **for now**. The store is also set to use strict mode by default.
-
 
 ## Contributors
 
 If you are interested and want to help out, don't hesitate to contact me or to create a pull request with your fixes / features.
+
+The project now also contains samples that you can use to directly test out your features during development.
+
+1. Clone the repository
+
+2. Install dependencies
+
+`npm install`
+
+3. Launch samples
+
+`npm run serve`
+
+4. Launch unit tests situated in *./tests*. The unit tests are written in Jest.
+
+`npm run test:unit`
+
 
 ## Bugs
 
