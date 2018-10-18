@@ -2,9 +2,8 @@
   "name": "vuex-simple",
   "version": "1.2.0",
   "description": "A simpler way to write your Vuex store in Typescript",
-  "main": "build/main/src/index.js",
-  "typings": "build/main/src/index.d.ts",
-  "module": "build/module/src/index.js",
+  "main": "build/src/index.js",
+  "typings": "build/src/index.d.ts",
   "repository": "https://github.com/sascha245/vuex-simple",
   "license": "MIT",
   "keywords": [
@@ -18,7 +17,7 @@
   ],
   "scripts": {
     "serve": "vue-cli-service serve ./samples/main.ts",
-    "build": "tsc -p tsconfig.prod.json",
+    "build": "rimraf ./build && tsc -p tsconfig.prod.json",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit --verbose",
     "validate": "npm run build && npm run test:unit && npm pack --dry-run"
