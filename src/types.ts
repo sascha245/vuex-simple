@@ -24,7 +24,7 @@ export interface ModuleInternals {
   __moduleBuilder__: ModuleBuilder;
 }
 export interface StoreInternals {
-  __storeBuilder__: StoreBuilder;
+  __storeBuilder__: StoreBuilder<any>;
 }
 
 export interface ModuleOptions {
