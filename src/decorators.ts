@@ -1,9 +1,9 @@
-import { Container, Token } from 'typedi';
+import { Token } from 'typedi';
 import { Action, Mutation } from 'vuex';
 
-import { applyDecorators, getInitialState } from './metadata';
-import { getStoreBuilder, StoreBuilder } from './store-builder';
-import { DecoratorType, InjectType, ModuleOptions } from './types';
+import { applyDecorators, collectDecorators } from './metadata';
+import { ModuleBuilder } from './module-builder';
+import { DecoratorType, InjectType, ModuleInternals, ModuleOptions } from './types';
 import { decoratorUtil, injectUtil } from './utils';
 
 function handleOptions(options: ModuleOptions | string): ModuleOptions {
@@ -17,30 +17,26 @@ function handleOptions(options: ModuleOptions | string): ModuleOptions {
 
 export function Module(pOptions: ModuleOptions | string) {
   return <T extends { new (...args: any[]): {} }>(target: T) => {
-    let singletonInstance: any;
+    collectDecorators(target);
 
-    return function(...args: any[]) {
-      if (singletonInstance) {
-        return singletonInstance;
-      }
+    const options = handleOptions(pOptions);
 
+    const moduleWrapper = function(...args: any[]) {
       const instance = new target(...args);
 
-      const options = handleOptions(pOptions);
-      const storeBuilder: StoreBuilder<any> = getStoreBuilder();
-      const initialState = getInitialState(instance);
-
-      const moduleBuilder = storeBuilder.module(options.namespace, initialState);
+      const moduleBuilder = new ModuleBuilder(options.namespace, {});
 
       applyDecorators<any>(moduleBuilder, instance);
 
-      injectUtil.injectAll(instance);
+      (instance as ModuleInternals).__moduleBuilder__ = moduleBuilder;
 
-      Container.set(target, instance);
-      singletonInstance = instance;
+      injectUtil.injectAll(instance);
 
       return instance;
     } as any;
+
+    moduleWrapper.prototype = target.prototype;
+    return moduleWrapper;
   };
 }
 

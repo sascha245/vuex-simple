@@ -1,13 +1,22 @@
 {
   "extends": ["tslint:latest", "tslint-config-prettier"],
   "defaultSeverity": "warn",
+  "linterOptions": {
+    "exclude": ["node_modules/**"]
+  },
   "rules": {
     "interface-name": [true, "never-prefix"],
     "variable-name": false,
     // TODO: allow devDependencies only in **/*.spec.ts files:
     // waiting on https://github.com/palantir/tslint/pull/3708
-    "no-implicit-dependencies": [true, "dev"],
+    // "no-implicit-dependencies": [true, "dev"],
     "ban-types": false,
-    "member-ordering": false
+    "member-ordering": false,
+    "curly": false,
+    "no-empty": false,
+    "no-implicit-dependencies": false, // else linter throws an error when using vue-router in samples
+    "prefer-conditional-expression": false,
+    "unified-signatures": false, // it is cleaner to separate multiple signatures
+    "only-arrow-functions": false // needed for wrapper constructor
   }
 }

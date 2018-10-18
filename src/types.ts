@@ -1,5 +1,8 @@
 import { Token } from 'typedi';
 
+import { ModuleBuilder } from './module-builder';
+import { StoreBuilder } from './store-builder';
+
 export enum DecoratorType {
   STATE = 1,
   ACTION,
@@ -15,6 +18,13 @@ export interface Injection {
   typeOrName: () => any;
   propertyName: string;
   index?: number;
+}
+
+export interface ModuleInternals {
+  __moduleBuilder__: ModuleBuilder;
+}
+export interface StoreInternals {
+  __storeBuilder__: StoreBuilder<any>;
 }
 
 export interface ModuleOptions {
