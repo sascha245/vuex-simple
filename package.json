@@ -1,6 +1,6 @@
 {
   "name": "vuex-simple",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A simpler way to write your Vuex store in Typescript",
   "main": "build/src/index.js",
   "typings": "build/src/index.d.ts",
