@@ -59,10 +59,6 @@ export function injectAll(instance: any, container?: ContainerInstance): void {
         identifier = typeOrName();
       }
 
-      if (identifier === Object) {
-        throw new CannotInjectError(this, propertyName);
-      }
-
       if (container && container.has(identifier)) {
         instance[propertyName] = container.get<any>(identifier);
       } else {
