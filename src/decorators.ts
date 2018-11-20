@@ -1,9 +1,7 @@
 import { Token } from 'typedi';
 import { Action, Mutation } from 'vuex';
 
-import { applyDecorators, collectDecorators } from './metadata';
-import { ModuleBuilder } from './module-builder';
-import { DecoratorType, InjectType, ModuleInternals, ModuleOptions } from './types';
+import { DecoratorType, InjectType, ModuleOptions } from './types';
 import { decoratorUtil, injectUtil } from './utils';
 
 function handleOptions(options: ModuleOptions | string): ModuleOptions {
@@ -16,33 +14,10 @@ function handleOptions(options: ModuleOptions | string): ModuleOptions {
 }
 
 export function Module(pOptions: ModuleOptions | string) {
+  const options = handleOptions(pOptions);
   return <T extends { new (...args: any[]): {} }>(target: T) => {
-    collectDecorators(target);
-
-    const options = handleOptions(pOptions);
-
-    const moduleWrapper = function(...args: any[]) {
-      const instance = new target(...args);
-
-      const moduleBuilder = new ModuleBuilder(options.namespace, {});
-
-      applyDecorators<any>(moduleBuilder, instance);
-
-      (instance as ModuleInternals).__moduleBuilder__ = moduleBuilder;
-
-      injectUtil.injectAll(instance);
-
-      return instance;
-    } as any;
-
-    moduleWrapper.prototype = target.prototype;
-    return moduleWrapper;
-  };
-}
-
-export function State() {
-  return (target: any, propertyName: string) => {
-    decoratorUtil.setDecorator(target, propertyName, DecoratorType.STATE);
+    decoratorUtil.setClassDecorator(target, options);
+    return target;
   };
 }
 
@@ -53,6 +28,12 @@ export function Inject(token: Token<any>): Function;
 export function Inject(typeOrName?: InjectType) {
   return (target: any, propertyName: string, index?: number) => {
     injectUtil.registerInjection(target, propertyName, typeOrName, index);
+  };
+}
+
+export function State() {
+  return (target: any, propertyName: string) => {
+    decoratorUtil.setDecorator(target, propertyName, DecoratorType.STATE);
   };
 }
 
@@ -79,5 +60,13 @@ export function Action() {
     descriptor: TypedPropertyDescriptor<(payload?: any) => Promise<any>>
   ) => {
     decoratorUtil.setDecorator(target, propertyName, DecoratorType.ACTION);
+  };
+}
+
+export function Submodule(pOptions: ModuleOptions | string) {
+  const options = handleOptions(pOptions);
+
+  return (target: any, propertyName: string) => {
+    decoratorUtil.setDecorator(target, propertyName, DecoratorType.SUBMODULE, options);
   };
 }

@@ -14,7 +14,7 @@ describe('Store creation', () => {
   });
 
   it('getStoreBuilder simple', () => {
-    const storeBuilder = getStoreBuilder();
+    const storeBuilder = getStoreBuilder('store1');
     storeBuilder.loadModules([TestModule]);
     storeBuilder.create();
 
@@ -28,7 +28,7 @@ describe('Store creation', () => {
   });
 
   it('getStoreBuilder with initialize ', () => {
-    const storeBuilder = getStoreBuilder();
+    const storeBuilder = getStoreBuilder('store2');
     storeBuilder.initialize({
       modules: {},
       state: {
@@ -41,11 +41,13 @@ describe('Store creation', () => {
 
     const testModule = Container.get(TestModule);
 
+    expect(testModule.counter).toBe(10);
+    expect(testModule.name).toBe('Will');
+
     // we verify we can call mutations
     testModule.setCounter(20);
 
     expect(testModule.counter).toBe(20);
-    expect(testModule.name).toBe('Will');
   });
 
   it('StoreBuilder simple', () => {
@@ -55,11 +57,13 @@ describe('Store creation', () => {
 
     const testModule = Container.get(TestModule);
 
+    expect(testModule.counter).toBe(10);
+    expect(testModule.name).toBe('Will');
+
     // we verify we can call mutations
     testModule.setCounter(20);
 
     expect(testModule.counter).toBe(20);
-    expect(testModule.name).toBe('Will');
   });
 
   it('StoreBuilder with options', () => {

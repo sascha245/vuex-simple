@@ -5,11 +5,6 @@ import { TestModule } from './modules/TestModule';
 
 Vue.use(VuexSimple);
 
-// const storeBuilder = new StoreBuilder({
-//   modules: {},
-//   strict: false
-// });
-
 const storeBuilder = getStoreBuilder();
 storeBuilder.initialize({
   modules: {},

@@ -1,14 +1,15 @@
 import { Container, ContainerInstance } from 'typedi';
 import { Module, Store, StoreOptions } from 'vuex';
 
-import { ModuleBuilder } from './module-builder';
-import { ModuleInternals, StoreInternals } from './types';
+import { instanceToModule } from './metadata';
+import { StoreInternals } from './types';
+import { getClassDecorator } from './utils/decorator-util';
 
 interface StoreBuilderOptions<R> extends StoreOptions<R> {
   container?: ContainerInstance;
 }
 
-export class StoreBuilder<State extends Object> {
+export class StoreBuilder<State extends Object = any> {
   private _container!: ContainerInstance;
   private _options!: StoreOptions<State>;
   private _store?: Store<State>;
@@ -84,9 +85,23 @@ export class StoreBuilder<State extends Object> {
       instance = new moduleClass();
       this._container.set(moduleClass, instance);
     }
-    const moduleBuilder: ModuleBuilder = (instance as ModuleInternals).__moduleBuilder__;
+    const constructor = instance.constructor;
+    const decorator = getClassDecorator(constructor);
+    if (!decorator) {
+      throw {
+        code: 'invalid_module',
+        message: "The given class isn't a valid vuex module"
+      };
+    }
+    const namespace = decorator.options.namespace;
+    const moduleBuilder = instanceToModule(namespace, instance, this, undefined);
+    if (!moduleBuilder) {
+      throw {
+        code: 'invalid_module',
+        message: "The given class isn't a valid vuex module"
+      };
+    }
     if (this._options.modules) {
-      moduleBuilder.setStoreBuilder(this);
       this._options.modules[moduleBuilder.namespace] = moduleBuilder.module;
     }
   }

@@ -1,61 +1,61 @@
 import { Action as Act, Getter, Mutation as Mut } from 'vuex';
 
 import { ModuleBuilder } from './module-builder';
-import { DecoratorType } from './types';
+import { StoreBuilder } from './store-builder';
+import { Decorator, DecoratorType, ModuleInternals, ModuleOptions } from './types';
 import { getDecorators } from './utils/decorator-util';
+import * as injectUtil from './utils/inject-util';
 
-interface DecoratedPrototype {
-  __states__: string[];
-  __getters__: string[];
-  __mutations__: string[];
-  __actions__: string[];
+export function instanceToModule(
+  name: string,
+  instance: Object,
+  storeBuilder: StoreBuilder,
+  parent?: ModuleBuilder
+) {
+  if (!instance) {
+    return undefined;
+  }
+  const moduleBuilder = new ModuleBuilder({
+    name,
+    parentBuilder: parent,
+    state: {},
+    storeBuilder
+  });
+  applyDecorators(moduleBuilder, instance);
+
+  (moduleBuilder as any).__instance__ = instance;
+  (instance as ModuleInternals).__moduleBuilder__ = moduleBuilder;
+
+  injectUtil.injectAll(instance);
+
+  return moduleBuilder;
 }
 
-export function collectDecorators(ctor) {
-  const decorators = getDecorators(ctor);
-  const proto: DecoratedPrototype = ctor.prototype;
-
-  proto.__states__ = [];
-  proto.__getters__ = [];
-  proto.__mutations__ = [];
-  proto.__actions__ = [];
-
-  decorators.forEach((decorator, key) => {
-    switch (decorator) {
+export function applyDecorators<State = any>(
+  moduleBuilder: ModuleBuilder<State, any>,
+  instance: any
+) {
+  const constructor = instance.constructor;
+  const decorators = getDecorators(constructor);
+  decorators.forEach(decorator => {
+    const { type, propertyName } = decorator;
+    switch (type) {
       case DecoratorType.STATE:
-        proto.__states__.push(key);
+        applyState(moduleBuilder, instance, propertyName);
         break;
       case DecoratorType.GETTER:
-        proto.__getters__.push(key);
+        applyGetter(moduleBuilder, instance, propertyName);
         break;
       case DecoratorType.MUTATION:
-        proto.__mutations__.push(key);
+        applyMutation<State>(moduleBuilder, instance, propertyName);
         break;
       case DecoratorType.ACTION:
-        proto.__actions__.push(key);
+        applyAction<State>(moduleBuilder, instance, propertyName);
+        break;
+      case DecoratorType.SUBMODULE:
+        applySubModule<State>(moduleBuilder, instance, decorator);
         break;
     }
-  });
-}
-
-export function applyDecorators<State>(moduleBuilder: ModuleBuilder<State, any>, instance: any) {
-  const constructor = instance.constructor;
-  const proto: DecoratedPrototype = constructor.prototype;
-
-  proto.__states__.forEach(propertyName => {
-    applyState(moduleBuilder, instance, propertyName);
-  });
-
-  proto.__getters__.forEach(propertyName => {
-    applyGetter(moduleBuilder, instance, propertyName);
-  });
-
-  proto.__mutations__.forEach(propertyName => {
-    applyMutation<State>(moduleBuilder, instance, propertyName);
-  });
-
-  proto.__actions__.forEach(propertyName => {
-    applyAction<State>(moduleBuilder, instance, propertyName);
   });
 }
 
@@ -131,4 +131,29 @@ function applyAction<State>(
   instance[propertyName] = (payload: any) => {
     return moduleBuilder.dispatch(propertyName, payload);
   };
+}
+
+function applySubModule<State>(
+  moduleBuilder: ModuleBuilder<State, any>,
+  instance: any,
+  decorator: Decorator
+) {
+  const { type, options, propertyName, target } = decorator;
+
+  const moduleOptions = options as ModuleOptions;
+  const moduleName = moduleOptions.namespace ? moduleOptions.namespace : propertyName;
+  const moduleType = (Reflect as any).getMetadata('design:type', target, propertyName);
+
+  const subInstance = type ? new moduleType() : undefined;
+  const subModuleBuilder = instanceToModule(
+    moduleName,
+    subInstance,
+    moduleBuilder.storeBuilder,
+    moduleBuilder
+  );
+  instance[propertyName] = subInstance;
+
+  if (subModuleBuilder) {
+    moduleBuilder.addModule(moduleName, subModuleBuilder);
+  }
 }

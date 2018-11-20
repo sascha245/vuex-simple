@@ -15,7 +15,6 @@ class BaseHome extends Vue {
 
 @Component
 export default class Home extends BaseHome {
-
   public get counter() {
     return this.testModule.counter;
   }
