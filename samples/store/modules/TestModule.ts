@@ -9,7 +9,7 @@ export class TestModule extends TestMutations {
   private testService!: TestService;
 
   @Submodule('my1')
-  public myModule1!: MyModule;
+  public myModule1 = new MyModule(5);
 
   @Submodule('my2')
   public myModule2!: MyModule;

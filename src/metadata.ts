@@ -12,7 +12,7 @@ export function instanceToModule(
   storeBuilder: StoreBuilder,
   parent?: ModuleBuilder
 ) {
-  if (!instance) {
+  if (!instance || !(instance instanceof Object)) {
     return undefined;
   }
   const moduleBuilder = new ModuleBuilder({
@@ -142,9 +142,12 @@ function applySubModule<State>(
 
   const moduleOptions = options as ModuleOptions;
   const moduleName = moduleOptions.namespace ? moduleOptions.namespace : propertyName;
-  const moduleType = (Reflect as any).getMetadata('design:type', target, propertyName);
 
-  const subInstance = type ? new moduleType() : undefined;
+  let subInstance = instance[propertyName];
+  if (!subInstance) {
+    const moduleType = (Reflect as any).getMetadata('design:type', target, propertyName);
+    subInstance = type ? new moduleType() : undefined;
+  }
   const subModuleBuilder = instanceToModule(
     moduleName,
     subInstance,

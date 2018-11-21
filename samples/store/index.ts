@@ -1,6 +1,6 @@
 import Vue from 'vue';
 
-import VuexSimple, { getStoreBuilder, StoreBuilder } from '../../src';
+import VuexSimple, { getStoreBuilder } from '../../src';
 import { TestModule } from './modules/TestModule';
 
 Vue.use(VuexSimple);
