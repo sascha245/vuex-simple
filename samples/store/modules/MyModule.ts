@@ -1,10 +1,6 @@
-import { Inject, Mutation, State } from '../../../src';
-import { TestService } from '../services/TestService';
+import { Mutation, State } from '../../../src';
 
 export class MyModule {
-  @Inject()
-  private testService!: TestService;
-
   @State()
   public counter: number = 0;
 

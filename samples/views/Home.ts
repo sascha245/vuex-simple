@@ -1,22 +1,21 @@
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-property-decorator';
 
-import { Inject } from '../../src';
-import { TestModule } from '../store/modules/TestModule';
-
-// tslint:disable
-
-// base.ts
-@Component
-class BaseHome extends Vue {
-  @Inject()
-  public testModule!: TestModule;
-  // ...
-}
+import { useStore } from '../../src';
+import { MyStore } from '../store/store';
 
 @Component
-export default class Home extends BaseHome {
+export default class Home extends Vue {
+  public store = useStore<MyStore>(this.$store);
+
+  public get testModule() {
+    return this.store.test;
+  }
+
   public get counter() {
     return this.testModule.counter;
+  }
+  public get total() {
+    return this.testModule.total;
   }
 
   public increment() {

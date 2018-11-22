@@ -1,7 +1,6 @@
 import { DecoratorMap, DecoratorType } from '../types';
 
 const KEY = '__decorators__';
-const CLASS_KEY = '__class__';
 
 export function setDecorator(
   target: any,
@@ -14,18 +13,9 @@ export function setDecorator(
     decorators.set(propertyName, {
       options,
       propertyName,
-      target,
       type
     });
   }
-}
-
-export function setClassDecorator(target: any, options?: any) {
-  setDecorator(target, CLASS_KEY, DecoratorType.CLASS, options);
-}
-export function getClassDecorator(target: any) {
-  const decorators = getDecorators(target);
-  return decorators ? decorators.get(CLASS_KEY) : undefined;
 }
 
 export function deleteDecorator(target: any, propertyName: string) {

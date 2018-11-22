@@ -1,17 +1,11 @@
 import Vue from 'vue';
+import Vuex from 'vuex';
 
-import VuexSimple, { getStoreBuilder } from '../../src';
-import { TestModule } from './modules/TestModule';
+import { createVuexStore } from '../../src';
+import { MyStore } from './store';
 
-Vue.use(VuexSimple);
+Vue.use(Vuex);
 
-const storeBuilder = getStoreBuilder();
-storeBuilder.initialize({
-  modules: {},
-  strict: false
+export default createVuexStore(new MyStore(), {
+  strict: true
 });
-storeBuilder.loadModules([TestModule]);
-
-const store = storeBuilder.create();
-
-export default store;

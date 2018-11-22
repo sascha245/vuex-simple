@@ -2,54 +2,39 @@
 
 A simpler way to write your Vuex store in Typescript
 
+## Changelog
+
+2.0.0:
+  - Remove typedi / dependency injections
+  - Remove deprecated functions
+  - Cleaner and easier usages
+  - Submodules
+
 ## Usage
 
-1. Install module:
+1. Install vuex
+`npm install vuex --save`
 
+2. Install module:
 `npm install vuex-simple --save`
-
-2. Install reflect-metadata package:
-
-`npm install reflect-metadata --save`
-
-and import it somewhere in the global place of your app before any service declaration or import (for example in app.ts):
-
-`import "reflect-metadata";`
-
-3. Enabled following settings in tsconfig.json:
-
-```json
-"emitDecoratorMetadata": true,
-"experimentalDecorators": true,
-```
-
-**Note:** *vuex-simple* uses the Container from [typedi](http://github.com/pleerock/typedi).
-
 
 ## Example
 
 #### Module
 
 ```ts
-// store/modules/counter.ts
+// store/modules/foo.ts
 
-import { Mutation, Module, Getter, State } from 'vuex-simple';
+import { Mutation, State } from 'vuex-simple';
 
-@Module('counter')
-class CounterModule {
-
+export class FooModule {
   @State()
-  public counter: number = 0;
+  public counter: number;
 
-  // A simple getter that is cached and made reactive by vuex
-  @Getter()
-  public get myGetter() {
-    console.log('my getter!');
-    return 42;
+  constructor(nb: number = 0) {
+    this.counter = nb;
   }
 
-  // A simple mutation function
-  // You can only modify your state in here, or Vuex will give you an error
   @Mutation()
   public increment() {
     this.counter++;
@@ -61,9 +46,34 @@ class CounterModule {
   }
 
   public async asyncIncrement() {
-    await new Promise(r => setTimeout(r, 500));
-    // simply call mutation function like you would any other function
+    await new Promise(r => setTimeout(r, 200));
+    // call mutation function like you would any other function
     this.increment();
+  }
+}
+```
+
+#### Submodules
+
+```ts
+// store/modules/bar.ts
+
+import { Getter, Module } from 'vuex-simple';
+import { FooModule } from './foo';
+
+export class BarModule {
+
+  // create submodule 'foo1'
+  @Module()
+  public foo1 = new FooModule(5);
+
+  // create submodule 'foo2'
+  @Module()
+  public foo2 = new FooModule(0);
+
+  @Getter()
+  public get total() {
+    return this.foo1.counter + this.foo2.counter;
   }
 }
 ```
@@ -71,23 +81,36 @@ class CounterModule {
 #### Store
 
 ```ts
+// store/store.ts
+
+import { Module, State } from 'vuex-simple';
+import { BarModule } from './modules/bar';
+
+export class MyStore {
+
+  @Module()
+  public bar = new BarModule();
+
+  @State()
+  public version = "2.0.0";
+}
+
 // store/index.ts
 
 import Vue from 'vue';
+import Vuex from 'vuex';
 
-import VuexSimple, { getStoreBuilder } from 'vuex-simple';
+import { createVuexStore } from 'vuex-simple';
 
-import CounterModule from './modules/counter';
+import { MyStore } from './store';
 
-Vue.use(VuexSimple);
+Vue.use(Vuex);
 
-const storeBuilder = getStoreBuilder();
-storeBuilder.loadModules([
-  CounterModule
-]);
-const store = storeBuilder.create();
-
-export default store;
+export default createVuexStore(new MyStore(), {
+  strict: false,
+  modules: {},
+  plugins: []
+});
 
 ```
 
@@ -96,56 +119,41 @@ export default store;
 ```ts
 // In your vue component
 
-import { Container, Inject } from 'vuex-simple';
-import CounterModule from '@/store/modules/counter';
+import { useStore } from 'vuex-simple';
+import { MyStore } from '@/store/store';
 
 @Component
 export default class MyComponent extends Vue {
 
-  @Inject()
-  public counterModule!: CounterModule;
+  public store = useStore<MyStore>(this.$store);
 
   public get readState() {
     // access state like a property
-    return this.counterModule.counter;
+    return this.store.version;
   }
 
   public get readGetter() {
     // access getter like a property
-    return this.counterModule.myGetter;
+    return this.store.bar.total;
   }
 
   public commitIncrement() {
     // call mutation like a function
-    this.counterModule.increment();
+    this.store.bar.foo1.increment();
   }
 
   public commitIncrementBy(number: id) {
     // call with parameter / payload
-    this.counterModule.incrementBy(10);
+    this.store.bar.foo2.incrementBy(10);
   }
 
   public callAction() {
-    counterModule.asyncIncrement();
+    this.store.bar.foo1.asyncIncrement();
   }
-
 }
-
-// Outside of a Vue component, you can also use Container to access the module
-const counterModule = Container.get(CounterModule);
-
-
 ```
 
 ## Features
-
-#### Module
-
-To create a module, we declare a new class and decorate it with `@Module(namespace)`
-
-#### Inject
-
-Inject another module or service in your module with `@Inject()`. This feature will enable you to easily split up your code across multiple files in a logic way.
 
 #### State
 
@@ -163,86 +171,47 @@ To add a mutation, we simply write a normal function and add a `@Mutation()` dec
 
 To add an action, we simply write a normal function and add a `@Action()` decorator to it. As for mutations, actions can, for now, only have at most 1 parameter.
 
-**Note on actions:** vuex use actions to do their async stuff, but we don't really need an action for that, a simple function that can call our mutations is all we need, as shown above.</br>
-So for now `@Action` is still included, but it may happen that it is removed in later versions.
+#### Module
+
+To add submodules to your module, you can decorate a property with `@Module()`. The property name will then be used as the namespace of this module.
+
 
 #### How to setup your store
 
-1. Use `Vue.use(VuexSimple)`
+1. Use `Vue.use(Vuex)`
 
-2. Get a StoreBuilder instance.
-
+2. Create an instance of your root module
 ```ts
-// 1. Use getStoreBuilder()
-const storeBuilder = getStoreBuilder();
-
-// 2. Create a new instance yourself
-const storeBuilder = new StoreBuilder();
-
+const instance = new MyStore();
 ```
 
-**Note:** `getStoreBuilder()` always returns the same instance
-
-3. (optional) Initialize your store options.
+3. Create your store. This will transform your instance so it actually uses the state, getters, mutations, etc... from the store.
 
 ```ts
-
-// 1. When using getStoreBuilder()
-const storeBuilder = getStoreBuilder();
-storeBuilder.initialize({
+const store = createVuexStore(instance, {
+  strict: false,
   modules: {},
-  state: {},
-  strict: false
+  plugins: []
 })
-
-// 2. Pass directly in the StoreBuilder constructor
-const storeBuilder = new StoreBuilder({
-  modules: {},
-  state: {},
-  strict: false
-});
-
 ```
 
-4. (optional) You can also use a custom container instance.
-
+4. Your instance has been transformed and is now synchronized with the store!
 ```ts
-
-const myContainer = Container.of('myContainer');
-const storeBuilder = getStoreBuilder();
-
-// 1. Using the initialize function or in the StoreBuilder constructor
-storeBuilder.initialize({
-  container: myContainer
-})
-
-// 2. Using the 'useContainer' function
-storeBuilder.useContainer(myContainer);
-
+// call a mutation
+instance.bar.foo1.increment()
 ```
 
-**Note:** Be careful to set the container before you load your modules!
-
-5. Use the StoreBuilder to load your modules
-
-```ts
-const storeBuilder = getStoreBuilder();
-storeBuilder.loadModules([
-  CounterModule
-]);
-```
-
-6. We finish by creating the store with `storeBuilder.create()`
-
+**Note**: You can also get the instance from the vuex store using `useStore<MyStore>(store)`.
 
 ## FAQ
 
-**How to split up your modules:**</br>
+**How do I split up my modules?**</br>
 There are different ways to split up your modules:
-1. Do all the heavy lifting (like API requests and such) in other files or services and inject them in your module
-2. Split up your modules into smaller modules. If necessary, you can also inject other modules into your main module.
+1. Do all the heavy lifting (like API requests and such) in other files or services.
 
-In the case the 2 solutions above don't work out for you, you can also use inheritance to split up your files, though it isn't the most recommended way:
+2. Split up your modules into multiple submodules.
+
+3. Use inheritance to split up your state, getters, mutations etc...
 
 ```ts
 class CounterState {
@@ -264,15 +233,12 @@ class CounterMutations extends CounterGetters {
   }
 }
 
-class CounterActions extends CounterMutations {
+class CounterModule extends CounterMutations {
   public async incrementAsync() {
     await new Promise(r => setTimeout(r, 500));
     this.increment();
   }
 }
-
-@Module('counter')
-class CounterModule extends CounterActions {}
 ```
 
 ## Contributors
@@ -284,27 +250,15 @@ The project now also contains samples that you can use to directly test out your
 1. Clone the repository
 
 2. Install dependencies
-
 `npm install`
 
 3. Launch samples
-
 `npm run serve`
 
 4. Launch unit tests situated in *./tests*. The unit tests are written in Jest.
-
 `npm run test:unit`
 
-
-## Bugs
-
-The core features presented should be stable.
-But as this module is still in development, it will probably still have some bugs here and there.
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-- Inspired in some parts by [vuex-type-safety](https://github.com/christopherkiss/vuex-type-safety)

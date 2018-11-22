@@ -1,56 +1,41 @@
-import 'reflect-metadata';
-
-import { Container } from 'typedi';
 import Vue from 'vue';
+import Vuex from 'vuex';
 
-import { TestModule } from '../../samples/store/modules/TestModule';
-import VuexSimple, { getStoreBuilder } from '../../src';
+import { MyStore } from '../../samples/store/store';
+import { createVuexStore, useStore } from '../../src';
 
-Vue.use(VuexSimple);
+Vue.use(Vuex);
 
 describe('Submodules tests', () => {
-  let store!: any;
-  let snapshot!: string;
-
-  beforeAll(async fn => {
-    const storeBuilder = getStoreBuilder();
-    storeBuilder.loadModules([TestModule]);
-    store = storeBuilder.create();
-    snapshot = JSON.stringify(store.state);
-    fn();
-  }, 100);
-
-  afterAll(() => {
-    Container.reset();
-  });
-
-  beforeEach(async () => {
-    store.replaceState(JSON.parse(snapshot));
-  });
-
   it('initial state', () => {
-    const testModule = Container.get(TestModule);
-    const my1 = testModule.myModule1;
-    const my2 = testModule.myModule2;
+    const $store = createVuexStore(new MyStore());
+    const store = useStore<MyStore>($store);
+    const testModule = store.test;
+
+    const my1 = testModule.my1;
+    const my2 = testModule.my2;
 
     expect(my1).not.toBe(my2);
-    expect(my1.counter).toBe(0);
+    expect(my1.counter).toBe(5);
     expect(my2.counter).toBe(0);
   });
 
   it('increment', () => {
-    const testModule = Container.get(TestModule);
-    const my1 = testModule.myModule1;
-    const my2 = testModule.myModule2;
+    const $store = createVuexStore(new MyStore());
+    const store = useStore<MyStore>($store);
+    const testModule = store.test;
 
-    expect(my1.counter).toBe(0);
+    const my1 = testModule.my1;
+    const my2 = testModule.my2;
+
+    expect(my1.counter).toBe(5);
     expect(my2.counter).toBe(0);
 
     my1.increment();
     my2.increment();
     my2.increment();
 
-    expect(my1.counter).toBe(1);
+    expect(my1.counter).toBe(6);
     expect(my2.counter).toBe(2);
   });
 });

@@ -1,18 +1,18 @@
-import { Inject, Module, Mutation, Submodule } from '../../../src';
-import { TestService } from '../services/TestService';
+import { Getter, Module, Mutation } from '../../../src';
 import { MyModule } from './MyModule';
 import { TestMutations } from './TestMutations';
 
-@Module('test')
 export class TestModule extends TestMutations {
-  @Inject()
-  private testService!: TestService;
+  @Module()
+  public my1 = new MyModule(5);
 
-  @Submodule('my1')
-  public myModule1 = new MyModule(5);
+  @Module()
+  public my2 = new MyModule();
 
-  @Submodule('my2')
-  public myModule2!: MyModule;
+  @Getter()
+  public get total() {
+    return this.counter + this.my1.counter + this.my2.counter;
+  }
 
   @Mutation()
   public setCounter(count: number) {
@@ -22,10 +22,5 @@ export class TestModule extends TestMutations {
   public async asyncIncrement() {
     await new Promise(r => setTimeout(r, 500));
     this.increment();
-  }
-
-  public async countItems() {
-    const count = await this.testService.countItems();
-    this.setCounter(count);
   }
 }

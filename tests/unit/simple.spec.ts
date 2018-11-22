@@ -1,42 +1,25 @@
-import "reflect-metadata";
+import Vue from 'vue';
+import Vuex from 'vuex';
 
-import { Container } from "typedi";
-import Vue from "vue";
+import { MyStore } from '../../samples/store/store';
+import { createVuexStore, useStore } from '../../src';
 
-import { TestModule } from "../../samples/store/modules/TestModule";
-import VuexSimple, { getStoreBuilder } from "../../src";
+Vue.use(Vuex);
 
-Vue.use(VuexSimple);
-
-describe("Simple tests", () => {
-  let store!: any;
-  let snapshot!: string;
-
-  beforeAll(async fn => {
-    const storeBuilder = getStoreBuilder();
-    storeBuilder.loadModules([TestModule]);
-    store = storeBuilder.create();
-    snapshot = JSON.stringify(store.state);
-    fn();
-  }, 100);
-
-  afterAll(() => {
-    Container.reset();
-  });
-
-  beforeEach(async () => {
-    store.replaceState(JSON.parse(snapshot));
-  });
-
-  it("initial state", () => {
-    const testModule = Container.get(TestModule);
+describe('Simple tests', () => {
+  it('initial state', () => {
+    const $store = createVuexStore(new MyStore());
+    const store = useStore<MyStore>($store);
+    const testModule = store.test;
 
     expect(testModule.counter).toBe(10);
-    expect(testModule.name).toBe("Will");
+    expect(testModule.name).toBe('Will');
   });
 
-  it("simple increment", () => {
-    const testModule = Container.get(TestModule);
+  it('simple increment', () => {
+    const $store = createVuexStore(new MyStore());
+    const store = useStore<MyStore>($store);
+    const testModule = store.test;
 
     expect(testModule.counter).toBe(10);
 
@@ -51,8 +34,11 @@ describe("Simple tests", () => {
     expect(testModule.counter).toBe(1);
   });
 
-  it("simple computed getters", () => {
-    const testModule = Container.get(TestModule);
+  it('simple computed getters', () => {
+    const $store = createVuexStore(new MyStore());
+    const store = useStore<MyStore>($store);
+    const testModule = store.test;
+
     testModule.setCounter(0);
 
     expect(testModule.normalGetter).not.toBe(testModule.normalGetter);
@@ -67,10 +53,13 @@ describe("Simple tests", () => {
     expect(testModule.cachedGetter.item).toBe(101);
   });
 
-  it("simple incrementAsync", async () => {
+  it('simple incrementAsync', async () => {
     expect.assertions(3);
 
-    const testModule = Container.get(TestModule);
+    const $store = createVuexStore(new MyStore());
+    const store = useStore<MyStore>($store);
+    const testModule = store.test;
+
     testModule.setCounter(0);
 
     expect(testModule.counter).toBe(0);
@@ -83,8 +72,11 @@ describe("Simple tests", () => {
     expect(testModule.counter).toBe(1);
   });
 
-  it("store replaceState", async () => {
-    const testModule = Container.get(TestModule);
+  it('store replaceState', async () => {
+    const $store = createVuexStore(new MyStore());
+    const store = useStore<MyStore>($store);
+    const testModule = store.test;
+
     testModule.setCounter(0);
 
     // set module counter to an initial value of 3
@@ -95,29 +87,18 @@ describe("Simple tests", () => {
     expect(testModule.counter).toBe(3);
 
     // take a snapshot, modify and apply it
-    const newState = JSON.parse(JSON.stringify(store.state));
+    const newState = JSON.parse(JSON.stringify($store.state));
     newState.test.counter = 1;
-    store.replaceState(newState);
+    $store.replaceState(newState);
 
     // check if replaced store values are taken into account by both the store and the module
-    expect(store.state.test.counter).toBe(1);
+    expect($store.state.test.counter).toBe(1);
     expect(testModule.counter).toBe(1);
 
     testModule.increment();
 
     // check if store and module is correctly synced
-    expect(store.state.test.counter).toBe(2);
+    expect($store.state.test.counter).toBe(2);
     expect(testModule.counter).toBe(2);
-  });
-
-  it("injection in module", async () => {
-    expect.assertions(2);
-    const testModule = Container.get(TestModule);
-    testModule.setCounter(0);
-    expect(testModule.counter).toBe(0);
-
-    await testModule.countItems();
-
-    expect(testModule.counter).toBe(42);
   });
 });
