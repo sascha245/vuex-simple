@@ -17,6 +17,7 @@ jest.config.js
 tsconfig.json
 tsconfig.prod.json
 tslint.json
+.circleci
 
 # Log files
 npm-debug.log*
