@@ -5,12 +5,12 @@ A simpler way to write your Vuex store in Typescript
 ## Changelog
 
 2.0.0:
-  - Remove typedi / dependency injections
+  - Remove typedi / dependency injections: : now available in a separate package [vue-typedi](https://github.com/sascha245/vue-typedi)
   - Remove deprecated functions
   - Cleaner and easier usages
   - Submodules
 
-## Usage
+## Install
 
 1. Install vuex
 `npm install vuex --save`
@@ -125,7 +125,7 @@ import { MyStore } from '@/store/store';
 @Component
 export default class MyComponent extends Vue {
 
-  public store = useStore<MyStore>(this.$store);
+  public store: MyStore = useStore(this.$store);
 
   public get readState() {
     // access state like a property
@@ -150,6 +150,82 @@ export default class MyComponent extends Vue {
   public callAction() {
     this.store.bar.foo1.asyncIncrement();
   }
+}
+```
+
+## Example with dependency injections
+
+#### Module with dependency injection
+
+```ts
+// store/modules/foo.ts
+
+import { Mutation, State } from 'vuex-simple';
+import { Inject, Injectable } from 'vue-typedi';
+import { MyService } from '...';
+
+@Injectable()
+export class FooModule {
+
+  @Inject()
+  public myService!: MyService;
+
+  ...
+}
+```
+
+#### Vue component with module injection
+
+```ts
+// store/tokens.ts
+
+import { Token } from 'vue-typedi';
+
+export default {
+  BAR: new Token('bar'),
+  BAR_FOO1: new Token('bar/foo1'),
+  BAR_FOO2: new Token('bar/foo2')
+};
+
+// store/index.ts
+
+import Vue from 'vue';
+import Vuex from 'vuex';
+import { Container } from 'vue-typedi';
+
+import { createVuexStore } from 'vuex-simple';
+
+import { MyStore } from './store';
+
+import tokens from './tokens'
+
+Vue.use(Vuex);
+
+const instance = new MyStore()
+
+Container.set(instance.bar, tokens.BAR);
+Container.set(instance.bar.foo1, tokens.BAR_FOO1);
+Container.set(instance.bar.foo2, tokens.BAR_FOO2);
+
+export default createVuexStore(instance, {
+  strict: false,
+  modules: {},
+  plugins: []
+});
+
+// In your vue component
+
+import { Inject } from 'vue-typedi';
+import { FooModule } from '@/store/modules/foo';
+import tokens from '@/store/tokens';
+
+@Component
+export default class MyComponent extends Vue {
+
+  @Inject(tokens.BAR_FOO1)
+  public foo1!: FooModule;
+
+  ...
 }
 ```
 

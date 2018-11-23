@@ -1,15 +1,21 @@
 import { Component, Vue } from 'vue-property-decorator';
+import { Inject } from 'vue-typedi';
 
 import { useStore } from '../../src';
+import { TestModule } from '../store/modules/TestModule';
 import { MyStore } from '../store/store';
+import tokens from '../store/tokens';
 
 @Component
 export default class Home extends Vue {
-  public store = useStore<MyStore>(this.$store);
+  public store: MyStore = useStore(this.$store);
 
-  public get testModule() {
-    return this.store.test;
-  }
+  @Inject(tokens.TEST)
+  public testModule!: TestModule;
+
+  // public get testModule() {
+  //   return this.store.test;
+  // }
 
   public get counter() {
     return this.testModule.counter;
@@ -21,6 +27,4 @@ export default class Home extends Vue {
   public increment() {
     this.testModule.increment();
   }
-
-  public created() {}
 }
