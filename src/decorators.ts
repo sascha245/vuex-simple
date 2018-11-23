@@ -1,44 +1,5 @@
-import { Token } from 'typedi';
-import { Action, Mutation } from 'vuex';
-
-import { applyDecorators, collectDecorators } from './metadata';
-import { ModuleBuilder } from './module-builder';
-import { DecoratorType, InjectType, ModuleInternals, ModuleOptions } from './types';
-import { decoratorUtil, injectUtil } from './utils';
-
-function handleOptions(options: ModuleOptions | string): ModuleOptions {
-  if (typeof options === 'string') {
-    return {
-      namespace: options
-    };
-  }
-  return options;
-}
-
-export function Module(pOptions: ModuleOptions | string) {
-  return <T extends { new (...args: any[]): {} }>(target: T) => {
-    collectDecorators(target);
-
-    const options = handleOptions(pOptions);
-
-    const moduleWrapper = function(...args: any[]) {
-      const instance = new target(...args);
-
-      const moduleBuilder = new ModuleBuilder(options.namespace, {});
-
-      applyDecorators<any>(moduleBuilder, instance);
-
-      (instance as ModuleInternals).__moduleBuilder__ = moduleBuilder;
-
-      injectUtil.injectAll(instance);
-
-      return instance;
-    } as any;
-
-    moduleWrapper.prototype = target.prototype;
-    return moduleWrapper;
-  };
-}
+import { DecoratorType } from './types';
+import * as decoratorUtil from './utils/decorator-util';
 
 export function State() {
   return (target: any, propertyName: string) => {
@@ -46,13 +7,9 @@ export function State() {
   };
 }
 
-export function Inject(type?: (type?: any) => Function): Function;
-export function Inject(serviceName?: string): Function;
-export function Inject(token: Token<any>): Function;
-
-export function Inject(typeOrName?: InjectType) {
-  return (target: any, propertyName: string, index?: number) => {
-    injectUtil.registerInjection(target, propertyName, typeOrName, index);
+export function Module() {
+  return (target: any, propertyName: string) => {
+    decoratorUtil.setDecorator(target, propertyName, DecoratorType.MODULE);
   };
 }
 

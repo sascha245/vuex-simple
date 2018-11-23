@@ -1,32 +1,15 @@
-import { Token } from 'typedi';
-
-import { ModuleBuilder } from './module-builder';
-import { StoreBuilder } from './store-builder';
-
 export enum DecoratorType {
   STATE = 1,
   ACTION,
   MUTATION,
-  GETTER
+  GETTER,
+  MODULE
 }
 
-export type DecoratorMap = Map<string, DecoratorType>;
-
-export type InjectType = ((type?: any) => Function) | string | Token<any>;
-
-export interface Injection {
-  typeOrName: () => any;
+export interface Decorator {
   propertyName: string;
-  index?: number;
+  type: DecoratorType;
+  options?: any;
 }
 
-export interface ModuleInternals {
-  __moduleBuilder__: ModuleBuilder;
-}
-export interface StoreInternals {
-  __storeBuilder__: StoreBuilder<any>;
-}
-
-export interface ModuleOptions {
-  namespace: string;
-}
+export type DecoratorMap = Map<string, Decorator>;
