@@ -1,4 +1,4 @@
-import { DecoratorMap, DecoratorType } from '../types';
+import { DecoratorMap, DecoratorType } from './types';
 
 const KEY = '__decorators__';
 

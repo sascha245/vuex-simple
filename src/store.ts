@@ -1,7 +1,7 @@
 import { Action, Getter, Module, ModuleTree, Mutation, Plugin, Store, StoreOptions } from 'vuex';
 
 import { DecoratorType } from './types';
-import { getDecorators } from './utils/decorator-util';
+import { getDecorators } from './utils';
 
 interface StoreProvider {
   store?: Store<any>;
@@ -13,8 +13,8 @@ interface StoreBuilder {
   provider: StoreProvider;
 }
 
-interface TypedStore extends Store<any> {
-  __root__: any;
+interface TypedStore<T> extends Store<any> {
+  __root__: T;
 }
 
 interface TypedStoreOptions<S> {
@@ -43,16 +43,14 @@ export function createVuexStore<T extends object>(
     ...userOptions.modules
   };
   options.plugins = userOptions.plugins;
-
-  // TODO merge with options from params
-  const store = new Store(options) as TypedStore;
+  const store = new Store(options) as TypedStore<T>;
   store.__root__ = pModule;
   storeProvider.store = store;
   return store;
 }
 
-export function useStore<T>(vuexStore: Store<any>): T {
-  const typedStore = vuexStore as TypedStore;
+export function useStore<T extends object>(vuexStore: Store<any>): T {
+  const typedStore = vuexStore as TypedStore<T>;
   return typedStore.__root__;
 }
 

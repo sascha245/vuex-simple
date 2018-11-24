@@ -1,9 +1,11 @@
 {
   "name": "vuex-simple",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A simpler way to write your Vuex store in Typescript",
-  "main": "build/src/index.js",
-  "typings": "build/src/index.d.ts",
+  "main": "dist/index.common.js",
+  "module": "dist/index.esm.js",
+  "typings": "dist/types/index.d.ts",
+  "files": ["dist"],
   "repository": "https://github.com/sascha245/vuex-simple",
   "license": "MIT",
   "keywords": [
@@ -15,7 +17,8 @@
   ],
   "scripts": {
     "serve": "vue-cli-service serve ./samples/main.ts",
-    "build": "rimraf ./build && tsc -p tsconfig.prod.json",
+    "clean": "rimraf dist .rpt2_cache",
+    "build": "npm run clean && rollup -c",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit --verbose",
     "validate": "npm run build && npm run test:unit && npm pack --dry-run"
@@ -31,6 +34,8 @@
     "babel-core": "7.0.0-bridge.0",
     "lint-staged": "^7.2.2",
     "rimraf": "^2.6.2",
+    "rollup": "^0.67.3",
+    "rollup-plugin-typescript2": "^0.18.0",
     "ts-jest": "^23.0.0",
     "tslint-config-prettier": "^1.15.0",
     "typescript": "^3.0.0",
@@ -42,11 +47,6 @@
     "vue-typedi": "^1.1.1",
     "vuex": "^3.0.1"
   },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
-  ],
   "gitHooks": {
     "pre-commit": "lint-staged"
   },

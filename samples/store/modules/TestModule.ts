@@ -1,6 +1,7 @@
 import { Getter, Module, Mutation } from '../../../src';
 import { MyModule } from './MyModule';
 import { TestMutations } from './TestMutations';
+import { TodoModule } from './TodoModule';
 
 export class TestModule extends TestMutations {
   @Module()
@@ -8,6 +9,9 @@ export class TestModule extends TestMutations {
 
   @Module()
   public my2 = new MyModule();
+
+  @Module()
+  public todos = new TodoModule();
 
   @Getter()
   public get total() {

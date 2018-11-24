@@ -1,23 +1,17 @@
 {
   "compilerOptions": {
+    "module": "es2015",
     "target": "es5",
-    "module": "commonjs",
-    "strict": true,
-    "jsx": "preserve",
-    "outDir": "build",
-    "noImplicitThis": false,
-    "noImplicitAny": false,
-    "declaration": true,
-    "importHelpers": true,
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "lib": ["es2015"],
     "sourceMap": true,
-    "baseUrl": ".",
-    "lib": ["es2015", "dom", "dom.iterable", "scripthost"]
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "outDir": "dist",
+    "importHelpers": true,
+    "removeComments": false,
+    "esModuleInterop": true,
+    "strictNullChecks": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }
