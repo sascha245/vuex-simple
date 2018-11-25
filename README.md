@@ -5,7 +5,7 @@ A simpler way to write your Vuex store in Typescript
 ## Changelog
 
 2.0.0:
-  - Remove typedi / dependency injections: : now available in a separate package [vue-typedi](https://github.com/sascha245/vue-typedi)
+  - Remove typedi / dependency injections: now available in a separate package [vue-typedi](https://github.com/sascha245/vue-typedi)
   - Remove deprecated functions
   - Cleaner and easier usages
   - Submodules
@@ -59,7 +59,8 @@ export class FooModule {
 
 #### Submodules
 
-It is also easy to create submodules by simply instanciating the submodule you want and adding the `@Module()` decorator. This will create a new module namespaced by the given property name.
+To create submodules, you first create a property decorated by `@Module()` and initialize it with a new instance of your module class. 
+The module will be namespaced by the name of the property.
 
 We can also have multiple instances of the same module if necessary. The code below would give us two submodules 'foo1' and 'foo2' with different initial values.
 
@@ -88,10 +89,8 @@ export class BarModule {
 
 #### Store
 
-To create a new store, you just need to instantiate one of your module classes and pass it to `createVuexStore`.
+To create a new store, you instantiate one of your module classes and pass it to `createVuexStore`.
 The instance is then transformed and bound to the store.
-
-This makes it also easy to create multiple store instances and testing them.
 
 ```ts
 // store/store.ts
@@ -119,7 +118,7 @@ import { MyStore } from './store';
 
 Vue.use(Vuex);
 
-// create our module instance
+// create our module class instance
 const instance = new MyStore();
 
 // create and export our store
@@ -134,11 +133,11 @@ instance.bar.foo2.increment();
 
 ```
 
-**Warning**: You need to create one module instance per store. Don't use an already transformed for `createVuexStore`.
+**Warning**: You need to create one module instance per store. Don't use an already transformed instance for `createVuexStore`.
 
 #### Usage
 
-You can use the `useStore(store)` function to get the bound module instance from your store.
+You can use the `useStore(store)` function to get the bound module class instance from your store.
 
 ```ts
 // In your vue component
@@ -185,9 +184,9 @@ In the following examples I will be using [vue-typedi](https://github.com/sascha
 
 #### Module with dependency injection
 
-You start by decorating your class with `@Injectable()`, which in fact just injects all your properties marked with `@Inject` when the class is instantiated.
+You start by decorating your class with `@Injectable`, which injects all your properties marked with `@Inject` when the class is instantiated.
 
-You can then freely inject whatever value you want from your container.
+You can then freely use `@Inject` in this class.
 
 ```ts
 // store/modules/foo.ts
@@ -208,9 +207,9 @@ export class FooModule {
 
 #### Vue component with module injection
 
-As dependency injection has been completely removed from this library, it is up to the user to setup whatever he wants to have in the container.
+As dependency injection has been completely removed from this library, it is up to the user to setup and bind the values he needs in the container.
 
-In this example I will use tokens from *typedi* as we can use each instance as a unique key.
+In this example, as we are using *typedi*, I will use their `Token` class to generate unique keys for our values.
 You can then bind these keys to the appropriate values / modules in your container.
 
 ```ts
@@ -241,6 +240,7 @@ Vue.use(Vuex);
 
 const instance = new MyStore()
 
+// bind tokens/keys to the appropriate module
 Container.set(tokens.BAR, instance.bar);
 Container.set(tokens.BAR_FOO1, instance.bar.foo1);
 Container.set(tokens.BAR_FOO2, instance.bar.foo2);
@@ -267,7 +267,7 @@ export default class MyComponent extends Vue {
 }
 ```
 
-## Features
+## Decorators
 
 #### State
 
@@ -279,11 +279,13 @@ To add a getter, we simply write a normal getter and add a `@Getter()` decorator
 
 #### Mutation
 
-To add a mutation, we simply write a normal function and add a `@Mutation()` decorator to it. For now, mutations can only have at most 1 parameter.
+To add a mutation, we simply write a normal function and add a `@Mutation()` decorator to it. Mutations can only have at most 1 parameter.
+
+**Note**: You can call mutations from any other function in your class, even if it is not an action.
 
 #### Action
 
-To add an action, we simply write a normal function and add a `@Action()` decorator to it. As for mutations, actions can, for now, only have at most 1 parameter.
+To add an action, we simply write a normal function and add a `@Action()` decorator to it. Actions can only have at most 1 parameter.
 
 #### Module
 
@@ -317,9 +319,9 @@ instance.bar.foo1.increment()
 
 **Note**: You can also get the instance from the vuex store using `useStore<MyStore>(store)`.
 
-## FAQ
 
-**How do I split up my modules?**</br>
+#### How to split up your modules
+
 There are different ways to split up your modules:
 1. Do all the heavy lifting (like API requests and such) in other files or services.
 
