@@ -145,7 +145,8 @@ function bindGetter(pBuilder: StoreBuilder, pModule: any, propertyName: string) 
   const options = pBuilder.options;
   const provider = pBuilder.provider;
   options.getters![propertyName] = getGetter(pModule, propertyName);
-  const getterName = pBuilder.namespaces.join('/') + '/' + propertyName;
+  const nsPath = pBuilder.namespaces.join('/');
+  const getterName = (nsPath ? nsPath + '/' : '') + propertyName;
 
   Object.defineProperty(pModule, propertyName, {
     get() {
@@ -164,7 +165,8 @@ function bindMutation(pBuilder: StoreBuilder, pModule: any, propertyName: string
   const options = pBuilder.options;
   const provider = pBuilder.provider;
   options.mutations![propertyName] = getMutation(pModule, propertyName);
-  const mutationName = pBuilder.namespaces.join('/') + '/' + propertyName;
+  const nsPath = pBuilder.namespaces.join('/');
+  const mutationName = (nsPath ? nsPath + '/' : '') + propertyName;
 
   pModule[propertyName] = (payload: any) => {
     provider.store!.commit(mutationName, payload);
@@ -181,7 +183,8 @@ function bindAction(pBuilder: StoreBuilder, pModule: any, propertyName: string) 
   const options = pBuilder.options;
   const provider = pBuilder.provider;
   options.actions![propertyName] = getAction(pModule, propertyName);
-  const actionName = pBuilder.namespaces.join('/') + '/' + propertyName;
+  const nsPath = pBuilder.namespaces.join('/');
+  const actionName = (nsPath ? nsPath + '/' : '') + propertyName;
 
   pModule[propertyName] = (payload: any) => {
     provider.store!.dispatch(actionName, payload);

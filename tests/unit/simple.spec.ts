@@ -101,4 +101,14 @@ describe('Simple tests', () => {
     expect($store.state.test.counter).toBe(2);
     expect(testModule.counter).toBe(2);
   });
+
+  it('root store counter', async () => {
+    const $store = createVuexStore(new MyStore());
+    const store = useStore<MyStore>($store);
+
+    expect(store.aRootCounter).toBe(0);
+    await store.incrementRootCounter();
+    await store.incrementRootCounter();
+    expect(store.aRootCounter).toBe(2);
+  });
 });
