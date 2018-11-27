@@ -187,7 +187,7 @@ function bindAction(pBuilder: StoreBuilder, pModule: any, propertyName: string) 
   const actionName = (nsPath ? nsPath + '/' : '') + propertyName;
 
   pModule[propertyName] = (payload: any) => {
-    provider.store!.dispatch(actionName, payload);
+    return provider.store!.dispatch(actionName, payload);
   };
 }
 

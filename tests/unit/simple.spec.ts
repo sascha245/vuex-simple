@@ -102,13 +102,21 @@ describe('Simple tests', () => {
     expect(testModule.counter).toBe(2);
   });
 
-  it('root store counter', async () => {
+  it('store root mutations', async () => {
     const $store = createVuexStore(new MyStore());
     const store = useStore<MyStore>($store);
 
     expect(store.aRootCounter).toBe(0);
-    await store.incrementRootCounter();
-    await store.incrementRootCounter();
-    expect(store.aRootCounter).toBe(2);
+    store.incrementRootCounter();
+    expect(store.aRootCounter).toBe(1);
+  });
+
+  it('store root actions', async () => {
+    const $store = createVuexStore(new MyStore());
+    const store = useStore<MyStore>($store);
+
+    expect(store.aRootCounter).toBe(0);
+    await store.actionIncrementRootCounter();
+    expect(store.aRootCounter).toBe(1);
   });
 });
