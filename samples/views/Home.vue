@@ -19,6 +19,10 @@
       <p>My2 Counter: {{ testModule.my2.counter }}</p>
       <button @click="testModule.my2.increment">Increment</button>
     </div>
+    <div>
+      <p>Root Counter: state/{{ store.rootCounter }}, getter/{{ store.aRootCounter }}</p>
+      <button @click="store.actionIncrementRootCounter">Increment - wait a sec</button>
+    </div>
   </div>
 </template>
 
