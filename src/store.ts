@@ -1,20 +1,29 @@
 import { Action, Getter, Module, ModuleTree, Mutation, Plugin, Store, StoreOptions } from 'vuex';
 
+import { alreadyExistsError, removeStaticError } from './errors';
 import { DecoratorType } from './types';
 import { getDecorators } from './utils';
 
+interface ModuleProvider {
+  module: object;
+  dynamic: boolean;
+}
+
 interface StoreProvider {
   store?: Store<any>;
+  modules: Map<string, ModuleProvider>;
 }
 
 interface StoreBuilder {
   namespaces: string[];
   options: Module<any, any>;
   provider: StoreProvider;
+  dynamic: boolean;
 }
 
 interface TypedStore<T> extends Store<any> {
-  __root__: T;
+  __vxs_root__: T;
+  __vxs_modules__: Map<string, ModuleProvider>;
 }
 
 interface TypedStoreOptions<S> {
@@ -28,7 +37,7 @@ export function createVuexStore<T extends object>(
   pOptions?: Partial<TypedStoreOptions<any>>
 ): Store<any> {
   const storeProvider: StoreProvider = {
-    store: undefined
+    modules: new Map()
   };
   const userOptions = {
     modules: {},
@@ -44,21 +53,69 @@ export function createVuexStore<T extends object>(
   };
   options.plugins = userOptions.plugins;
   const store = new Store(options) as TypedStore<T>;
-  store.__root__ = pModule;
+  store.__vxs_root__ = pModule;
+  store.__vxs_modules__ = storeProvider.modules;
   storeProvider.store = store;
   return store;
 }
 
-export function useStore<T extends object>(vuexStore: Store<any>): T {
-  const typedStore = vuexStore as TypedStore<T>;
-  return typedStore.__root__;
+export function registerModule<T extends object>(
+  store: Store<any>,
+  namespace: string[],
+  instance: T
+) {
+  const joinedNamespace = namespace.join('/');
+  const typedStore = store as TypedStore<any>;
+  const storeProvider: StoreProvider = {
+    modules: typedStore.__vxs_modules__
+  };
+  const vuexModule = transformRecursive(storeProvider, instance, namespace, true);
+  store.registerModule(joinedNamespace, vuexModule);
+  storeProvider.store = store;
 }
 
-function transformRecursive(
+export function unregisterModule(store: Store<any>, namespace: string[]) {
+  const joinedNamespace = namespace.join('/');
+  const typedStore = store as TypedStore<any>;
+  const moduleProvider = typedStore.__vxs_modules__.get(joinedNamespace);
+  const isDynamic = moduleProvider ? moduleProvider.dynamic : false;
+  if (!isDynamic) {
+    throw removeStaticError(joinedNamespace);
+  }
+  typedStore.__vxs_modules__.delete(joinedNamespace);
+  store.unregisterModule(joinedNamespace);
+}
+
+export function useStore<T extends object>(vuexStore: Store<any>): T {
+  const typedStore = vuexStore as TypedStore<T>;
+  return typedStore.__vxs_root__;
+}
+
+export function useModule<T extends object>(
+  vuexStore: Store<any>,
+  namespace: string[] = []
+): T | undefined {
+  const joinedNamespace: string = namespace.join('/');
+  const typedStore = vuexStore as TypedStore<T>;
+  const moduleProvider = typedStore.__vxs_modules__.get(joinedNamespace);
+  return moduleProvider ? (moduleProvider.module as T) : undefined;
+}
+
+function transformRecursive<T extends object>(
   pStoreProvider: StoreProvider,
-  pModule: any,
-  pNamespace: string[] = []
+  pModule: T,
+  pNamespace: string[] = [],
+  dynamic: boolean = false
 ): Module<any, any> {
+  const joinedNamespace = pNamespace.join('/');
+  if (pStoreProvider.modules.has(joinedNamespace)) {
+    throw alreadyExistsError(joinedNamespace);
+  }
+  pStoreProvider.modules.set(joinedNamespace, {
+    dynamic,
+    module: pModule
+  });
+
   const storeOptions: Module<any, any> = {
     actions: {},
     getters: {},
@@ -69,6 +126,7 @@ function transformRecursive(
   };
 
   const builder: StoreBuilder = {
+    dynamic,
     namespaces: pNamespace,
     options: storeOptions,
     provider: pStoreProvider
@@ -89,7 +147,6 @@ function transformRecursive(
         return bindAction(builder, pModule, propertyName);
       case DecoratorType.MODULE:
         return bindModule(builder, pModule, propertyName);
-        break;
     }
   });
   return storeOptions;
@@ -196,14 +253,18 @@ function bindModule(pBuilder: StoreBuilder, pModule: any, propertyName: string) 
   if (!subModule) {
     return;
   }
-  const moduleOptions = transformRecursive(
-    pBuilder.provider,
-    subModule,
-    pBuilder.namespaces.concat(propertyName)
-  );
-  const options = pBuilder.options;
-  options.modules![propertyName] = moduleOptions;
-
+  try {
+    const moduleOptions = transformRecursive(
+      pBuilder.provider,
+      subModule,
+      pBuilder.namespaces.concat(propertyName),
+      pBuilder.dynamic
+    );
+    const options = pBuilder.options;
+    options.modules![propertyName] = moduleOptions;
+  } catch (err) {
+    console.error(err);
+  }
   Object.defineProperty(pModule, propertyName, {
     get() {
       return subModule;
