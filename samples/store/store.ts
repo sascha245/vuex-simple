@@ -1,6 +1,7 @@
 import { Action, Getter, Module, Mutation, State } from '../../src';
-import { MyModule } from './modules/MyModule';
-import { TestModule } from './modules/TestModule';
+import { MyModule } from './modules/my';
+import { TestModule } from './modules/test';
+import { TodoModule } from './modules/todo';
 
 export class MyStore {
   @Module()
@@ -8,6 +9,9 @@ export class MyStore {
 
   @Module()
   public test = new TestModule();
+
+  @Module()
+  public todo = new TodoModule();
 
   @State()
   public version = '2.0.0';
@@ -18,6 +22,16 @@ export class MyStore {
   @Getter()
   public get aRootCounter() {
     return this.rootCounter;
+  }
+
+  /**
+   * Getter example with method style access
+   */
+  @Getter()
+  public get numberButIncreased() {
+    return (nb: number) => {
+      return nb + 1;
+    };
   }
 
   @Mutation()

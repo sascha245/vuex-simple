@@ -1,4 +1,4 @@
-import { Mutation, State } from '../../../src';
+import { Mutation, State } from '../../../../src';
 
 export class ListModule<T> {
   @State()

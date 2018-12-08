@@ -2,7 +2,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { Inject } from 'vue-typedi';
 
 import { useStore } from '../../src';
-import { TestModule } from '../store/modules/TestModule';
+import { TestModule } from '../store/modules/test';
 import { MyStore } from '../store/store';
 import tokens from '../store/tokens';
 

@@ -1,13 +1,13 @@
 import { Inject, Injectable } from 'vue-typedi';
 
 import { Getter, Module } from '../../../src';
-import { MyModule } from './MyModule';
-import { TestModule } from './TestModule';
+import { TestService } from '../services/TestService';
+import { MyModule } from './my';
 
 @Injectable()
 export class InjectableModule {
   @Inject()
-  public testModule!: TestModule;
+  public testService!: TestService;
 
   @Module()
   public my1 = new MyModule(5);

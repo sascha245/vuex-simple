@@ -23,6 +23,9 @@
       <p>Root Counter: state/{{ store.rootCounter }}, getter/{{ store.aRootCounter }}</p>
       <button @click="store.actionIncrementRootCounter">Increment - wait a sec</button>
     </div>
+    <div>
+      <p>Number but increased: {{ store.numberButIncreased(counter) }}</p>
+    </div>
   </div>
 </template>
 

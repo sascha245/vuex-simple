@@ -1,4 +1,4 @@
-import { ListModule } from './ListModule';
+import { ListModule } from './generics/list';
 
 export interface Todo {
   userId: number;

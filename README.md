@@ -59,7 +59,7 @@ export class FooModule {
 
 #### Submodules
 
-To create submodules, you first create a property decorated by `@Module()` and initialize it with a new instance of your module class. 
+To create submodules, you first create a property decorated by `@Module()` and initialize it with a new instance of your module class.
 The module will be namespaced by the name of the property.
 
 We can also have multiple instances of the same module if necessary. The code below would give us two submodules 'foo1' and 'foo2' with different initial values.
@@ -182,6 +182,8 @@ export default class MyComponent extends Vue {
 This section shows how to use dependency injection with this library.
 In the following examples I will be using [vue-typedi](https://github.com/sascha245/vue-typedi) that makes use of the library [typedi](http://github.com/pleerock/typedi), but you can choose any other dependency injection library if you want.
 
+Note that this step is completely optional and is in no case required for this library to work.
+
 #### Module with dependency injection
 
 You start by decorating your class with `@Injectable`, which injects all your properties marked with `@Inject` when the class is instantiated.
@@ -277,6 +279,22 @@ To tell the module which properties of the class will compose the state of the v
 
 To add a getter, we simply write a normal getter and add a `@Getter()` decorator to it.
 
+As with Vuex getters, they don't take any arguments. You can however pass arguments to getters by returning a function, like how it is described on the official documentations of vuex:<br/>
+https://vuex.vuejs.org/guide/getters.html#method-style-access
+
+```ts
+// Getter
+@Getter()
+public get numberButIncreased() {
+    return (someNumber: string) => {
+        return someNumber + 1;
+    }
+}
+
+// Usage
+myModule.numberButIncreased(5); // returns 6
+```
+
 #### Mutation
 
 To add a mutation, we simply write a normal function and add a `@Mutation()` decorator to it. Mutations can only have at most 1 parameter.
@@ -291,6 +309,7 @@ To add an action, we simply write a normal function and add a `@Action()` decora
 
 To add submodules to your module, you can decorate a property with `@Module()`. The property name will then be used as the namespace of this module.
 
+### How to
 
 #### How to setup your store
 
