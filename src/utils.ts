@@ -1,28 +1,12 @@
-import { DecoratorMap, DecoratorType } from './types';
+import { DecoratorHandler, DecoratorMap } from './types';
 
 const KEY = '__decorators__';
 
-export function setDecorator(
-  target: any,
-  propertyName: string,
-  type: DecoratorType,
-  options?: any
-) {
-  const decorators = getDecorators(target);
-  if (decorators) {
-    decorators.set(propertyName, {
-      options,
-      propertyName,
-      type
-    });
-  }
-}
-
-export function deleteDecorator(target: any, propertyName: string) {
-  const decorators = getDecorators(target);
-  if (decorators) {
-    decorators.delete(propertyName);
-  }
+export function createDecorator(handler: DecoratorHandler) {
+  return () => (target: any, propertyName: string) => {
+    const decorators = getDecorators(target);
+    decorators.set(propertyName, handler);
+  };
 }
 
 export function getDecorators(target: any): DecoratorMap {

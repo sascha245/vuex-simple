@@ -1,15 +1,20 @@
-export enum DecoratorType {
-  STATE = 1,
-  ACTION,
-  MUTATION,
-  GETTER,
-  MODULE
+import { Module, Store } from 'vuex';
+
+export type DecoratorHandler = (builder: StoreBuilder, instance: any, propertyName: string) => void;
+export type DecoratorMap = Map<string, DecoratorHandler>;
+
+export interface ModuleProvider {
+  module: object;
+  dynamic: boolean;
 }
 
-export interface Decorator {
-  propertyName: string;
-  type: DecoratorType;
-  options?: any;
+export interface StoreProvider {
+  store?: Store<any>;
+  modules: Map<string, ModuleProvider>;
 }
-
-export type DecoratorMap = Map<string, Decorator>;
+export interface StoreBuilder {
+  namespaces: string[];
+  options: Module<any, any>;
+  provider: StoreProvider;
+  dynamic: boolean;
+}
