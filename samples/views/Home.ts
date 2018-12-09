@@ -2,6 +2,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { Inject } from 'vue-typedi';
 
 import { registerModule, unregisterModule, useModule, useStore } from '../../src';
+import { MyModule } from '../store/modules/my';
 import { TestModule } from '../store/modules/test';
 import { MyStore } from '../store/store';
 import tokens from '../store/tokens';
@@ -13,6 +14,8 @@ export default class Home extends Vue {
   @Inject(tokens.TEST)
   public testModule!: TestModule;
 
+  public my1?: MyModule = useModule(this.$store, ['test', 'my1']);
+
   // public get testModule() {
   //   return this.store.test;
   // }
@@ -20,15 +23,15 @@ export default class Home extends Vue {
   public mounted() {
     const test = useModule<TestModule>(this.$store, ['test']);
 
-    registerModule(this.$store, ['toto'], new TestModule());
+    registerModule(this.$store, ['dynamic'], new TestModule());
 
-    const toto = useModule<TestModule>(this.$store, ['toto']);
-    if (toto) {
-      toto.increment();
+    const dynamicModule = useModule<TestModule>(this.$store, ['dynamic']);
+    if (dynamicModule) {
+      dynamicModule.increment();
     }
   }
-  public destroy() {
-    unregisterModule(this.$store, ['toto']);
+  public destroyed() {
+    unregisterModule(this.$store, ['dynamic']);
   }
 
   public get counter() {

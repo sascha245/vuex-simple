@@ -144,12 +144,16 @@ You can use the `useStore(store)` function to get the bound module class instanc
 
 import { useStore } from 'vuex-simple';
 import { MyStore } from '@/store/store';
+import { FooModule } from '@/store/modules/foo';
 
 @Component
 export default class MyComponent extends Vue {
 
   // get the module instance from the created store
   public store: MyStore = useStore(this.$store);
+
+  // get the module instance with the given namespace
+  public foo1?: FooModule = useModule(this.$store, ['bar', 'foo1']);
 
   public get readState() {
     // access state like a property
@@ -176,6 +180,28 @@ export default class MyComponent extends Vue {
   }
 }
 ```
+
+## Dynamic modules
+
+To add a dynamic module to your store, you can use the `registerModule` function from this package:
+
+```ts
+registerModule($store, ['dynamic_foo'], new FooModule(6));
+```
+
+You can then use `useModule`, to get the bound class instance of the given namespace:
+
+```ts
+const foo = useModule<FooModule>($store, ['dynamic_foo']);
+```
+
+To remove the dynamic module from the store, you can use the `unregisterModule` function from this package:
+
+```ts
+unregisterModule($store, ['dynamic_foo']);
+```
+
+**Note**: You can also those functions on a standard Vuex store.
 
 ## Example with dependency injections
 

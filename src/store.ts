@@ -47,26 +47,39 @@ export function registerModule<T extends object>(
   namespace: string[],
   instance: T
 ) {
-  const joinedNamespace = namespace.join('/');
   const typedStore = store as TypedStore<any>;
+  if (!typedStore.__vxs_modules__) {
+    typedStore.__vxs_modules__ = new Map();
+  }
   const storeProvider: StoreProvider = {
     modules: typedStore.__vxs_modules__
   };
   const vuexModule = transformRecursive(storeProvider, instance, namespace, true);
-  store.registerModule(joinedNamespace, vuexModule);
+  store.registerModule(namespace, vuexModule);
   storeProvider.store = store;
 }
 
 export function unregisterModule(store: Store<any>, namespace: string[]) {
   const joinedNamespace = namespace.join('/');
   const typedStore = store as TypedStore<any>;
+  if (!typedStore.__vxs_modules__) {
+    typedStore.__vxs_modules__ = new Map();
+  }
   const moduleProvider = typedStore.__vxs_modules__.get(joinedNamespace);
   const isDynamic = moduleProvider ? moduleProvider.dynamic : true;
   if (!isDynamic) {
     throw removeStaticError(joinedNamespace);
   }
+  // Remove module
   typedStore.__vxs_modules__.delete(joinedNamespace);
-  store.unregisterModule(joinedNamespace);
+  // Remove submodules
+  const submodulesNamespace = joinedNamespace + '/';
+  const keys = Array.from(typedStore.__vxs_modules__.keys());
+  keys
+    .filter(key => key.startsWith(submodulesNamespace))
+    .forEach(key => typedStore.__vxs_modules__.delete(key));
+  // Unregister module from vuex store
+  store.unregisterModule(namespace);
 }
 
 export function useStore<T extends object>(vuexStore: Store<any>): T {
@@ -80,6 +93,9 @@ export function useModule<T extends object>(
 ): T | undefined {
   const joinedNamespace: string = namespace.join('/');
   const typedStore = vuexStore as TypedStore<T>;
+  if (!typedStore.__vxs_modules__) {
+    typedStore.__vxs_modules__ = new Map();
+  }
   const moduleProvider = typedStore.__vxs_modules__.get(joinedNamespace);
   return moduleProvider ? (moduleProvider.module as T) : undefined;
 }

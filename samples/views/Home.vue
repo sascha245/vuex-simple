@@ -12,8 +12,8 @@
       <button @click="increment">Increment</button>
     </div>
     <div>
-      <p>My1 Counter: {{ testModule.my1.counter }}</p>
-      <button @click="testModule.my1.increment">Increment</button>
+      <p>My1 Counter: {{ my1.counter }}</p>
+      <button @click="my1.increment">Increment</button>
     </div>
     <div>
       <p>My2 Counter: {{ testModule.my2.counter }}</p>
@@ -29,5 +29,4 @@
   </div>
 </template>
 
-<style>
-</style>
+<style></style>
