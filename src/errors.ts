@@ -16,3 +16,13 @@ export function removeStaticError(namespace: string) {
     }
   };
 }
+export function getterNotFoundError(propertyName: string, className: string) {
+  return {
+    code: 'getter_not_found',
+    message: `Could not find getter "${propertyName}" for module ${className}`,
+    params: {
+      className,
+      propertyName
+    }
+  };
+}
