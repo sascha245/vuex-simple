@@ -1,6 +1,6 @@
 {
   "name": "vuex-simple",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A simpler way to write your Vuex store in Typescript",
   "main": "dist/index.common.js",
   "module": "dist/index.esm.js",
