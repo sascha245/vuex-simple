@@ -87,6 +87,37 @@ export class BarModule {
 }
 ```
 
+#### Root state
+
+When using submodules one might want to access the root state.
+That's how it can be achieved:
+
+```ts
+class ModuleA {
+  constructor(private root: RootModule) {}
+
+  @State()
+  public count: number = 0;
+
+  @Getter()
+  public get sumWithRootCount() {
+    return this.count + this.root.count;
+  }
+}
+
+class RootModule {
+  @State()
+  public count: number = 0;
+
+  @Module()
+  public a = new ModuleA(this);
+}
+
+const store = createVuexStore(new RootModule());
+console.log(store.state.a)
+# => Logs the state of `ModuleA`
+```
+
 #### Store
 
 To create a new store, you instantiate one of your module classes and pass it to `createVuexStore`.
