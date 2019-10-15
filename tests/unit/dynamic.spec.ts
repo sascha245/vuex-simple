@@ -50,6 +50,33 @@ describe('Dynamic modules', () => {
     expect(my!.counter).toBe(8);
   });
 
+  it('register dynamic module preserving state', () => {
+    const $store = createVuexStore(new MyStore());
+    $store.replaceState({
+      ...$store.state,
+      toto: {
+        counter: 1
+      }
+    });
+    const my = new MyModule(3);
+    registerModule($store, ['toto'], my, {
+      preserveState: true
+    });
+
+    expect(my).not.toBe(undefined);
+    expect(my!.counter).toBe(1);
+
+    let thrownError;
+    try {
+      my!.increment();
+    } catch (error) {
+      thrownError = error;
+    }
+
+    expect(thrownError).toBe(undefined);
+    expect(my!.counter).toBe(2);
+  });
+
   it('useModule', () => {
     const $store = createVuexStore(new MyStore());
     registerModule($store, ['toto'], new MyModule(6));
