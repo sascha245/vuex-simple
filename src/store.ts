@@ -1,4 +1,4 @@
-import { ModuleTree, Plugin, Store, StoreOptions } from 'vuex';
+import { ModuleOptions, ModuleTree, Plugin, Store, StoreOptions } from 'vuex';
 
 import { removeStaticError } from './errors';
 import { transformRecursive } from './transform';
@@ -45,7 +45,8 @@ export function createVuexStore<T extends object>(
 export function registerModule<T extends object>(
   store: Store<any>,
   namespace: string[],
-  instance: T
+  instance: T,
+  options?: ModuleOptions
 ) {
   const typedStore = store as TypedStore<any>;
   if (!typedStore.__vxs_modules__) {
@@ -55,7 +56,7 @@ export function registerModule<T extends object>(
     modules: typedStore.__vxs_modules__
   };
   const vuexModule = transformRecursive(storeProvider, instance, namespace, true);
-  store.registerModule(namespace, vuexModule);
+  store.registerModule(namespace, vuexModule, options);
   storeProvider.store = store;
 }
 
